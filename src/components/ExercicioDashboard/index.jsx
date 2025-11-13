@@ -96,7 +96,8 @@ export default function ExercicioDashboard() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Tem certeza que deseja excluir este exercício?")) return;
+    if (!window.confirm("Tem certeza que deseja excluir este exercício?"))
+      return;
     try {
       await deleteExercicio(id);
       await loadExercicios();
@@ -116,8 +117,17 @@ export default function ExercicioDashboard() {
     }
   };
 
+  // Lista de categorias para separação
+
+  const categorias = Array.from(
+    new Set(exercicios.map((ex) => ex.Categoria).filter(Boolean))
+  );
+  const grupos = Array.from(
+    new Set(exercicios.map((ex) => ex.Grupo_Muscular).filter(Boolean))
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 p-8">
+    <div className="min-h-screen from-blue-50 to-gray-100 p-8">
       <div className="max-w-6xl mx-auto bg-white shadow-xl rounded-2xl p-8 border border-gray-200">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-blue-700">🏋️ Exercícios</h1>
@@ -148,34 +158,42 @@ export default function ExercicioDashboard() {
             className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none"
           />
 
-          <select
-            value={filters.categoria}
-            onChange={(e) =>
-              setFilters({ ...filters, categoria: e.target.value })
-            }
-            className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none"
-          >
-            <option value="">Todas as Categorias</option>
-            <option value="Peito">Peito</option>
-            <option value="Costas">Costas</option>
-            <option value="Perna">Perna</option>
-            <option value="Braço">Braço</option>
-          </select>
+          {categorias.length > 0 && (
+            <select
+              value={filters.categoria}
+              onChange={(e) =>
+                setFilters({ ...filters, categoria: e.target.value })
+              }
+              className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            >
+              <option value="">Todas as Categorias</option>
+              {categorias.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+          )}
 
-          <select
-            value={filters.grupo}
-            onChange={(e) => setFilters({ ...filters, grupo: e.target.value })}
-            className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none"
-          >
-            <option value="">Todos os Grupos</option>
-            <option value="Peitoral">Peitoral</option>
-            <option value="Dorsal">Dorsal</option>
-            <option value="Quadríceps">Quadríceps</option>
-            <option value="Bíceps">Bíceps</option>
-          </select>
+          {grupos.length > 0 && (
+            <select
+              value={filters.grupo}
+              onChange={(e) =>
+                setFilters({ ...filters, grupo: e.target.value })
+              }
+              className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            >
+              <option value="">Todos os Grupos</option>
+              {grupos.map((grp) => (
+                <option key={grp} value={grp}>
+                  {grp}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
-{/* 🔹 Tabela */}
+        {/* 🔹 Exercícios separados por categoria */}
         {loading ? (
           <p className="text-gray-500 text-center">Carregando exercícios...</p>
         ) : filteredExercicios.length === 0 ? (
@@ -183,43 +201,49 @@ export default function ExercicioDashboard() {
             Nenhum exercício cadastrado ainda.
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border border-gray-200 rounded-xl">
-              <thead className="bg-blue-700 text-white">
-                <tr>
-                  <th className="py-3 px-4 text-left">Nome</th>
-                  <th className="py-3 px-4 text-left">Categoria</th>
-                  <th className="py-3 px-4 text-left">Grupo Muscular</th>
-                  <th className="py-3 px-4 text-left">Aparelho</th>
-                  <th className="py-3 px-4 text-center">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredExercicios.map((ex) => (
-                  <tr
-                    key={ex.id}
-                    className="border-b hover:bg-blue-50 cursor-pointer transition-all"
-                    onClick={() => setEditModal(ex)}
-                  >
-                    <td className="py-3 px-4">{ex.nome}</td>
-                    <td className="py-3 px-4">{ex.Categoria}</td>
-                    <td className="py-3 px-4">{ex.Grupo_Muscular}</td>
-                    <td className="py-3 px-4">{ex.Aparelho}</td>
-                    <td className="py-3 px-4 text-center">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(ex.id);
-                        }}
-                        className="text-red-600 hover:underline"
+          <div className="space-y-8">
+            {categorias.map((categoria) => {
+              const exerciciosCategoria = filteredExercicios.filter(
+                (ex) => ex.Categoria === categoria
+              );
+              if (exerciciosCategoria.length === 0) return null;
+
+              return (
+                <div key={categoria} className="">
+                  <h2 className="text-xl font-bold text-blue-700 mb-4">
+                    {categoria}
+                  </h2>
+                  <div className="flex flex-wrap gap-4 overflow-x-auto pb-2">
+                    {exerciciosCategoria.map((ex) => (
+                      <div
+                        key={ex.id}
+                        className="min-w-[250px] bg-white border border-gray-200 rounded-xl p-4 shadow hover:shadow-lg cursor-pointer transition-all"
+                        onClick={() => setEditModal(ex)}
                       >
-                        Excluir
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        <h3 className="font-semibold text-gray-800 mb-1">
+                          {ex.nome}
+                        </h3>
+                        <p className="text-gray-500 text-sm mb-1">
+                          Grupo: {ex.Grupo_Muscular}
+                        </p>
+                        <p className="text-gray-500 text-sm mb-1">
+                          Aparelho: {ex.Aparelho}
+                        </p>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(ex.id);
+                          }}
+                          className="text-red-600 hover:underline text-sm mt-2"
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -255,7 +279,9 @@ export default function ExercicioDashboard() {
                 type="text"
                 placeholder="Categoria"
                 value={form.Categoria}
-                onChange={(e) => setForm({ ...form, Categoria: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, Categoria: e.target.value })
+                }
                 required
                 className="w-full border border-gray-700 rounded-xl px-4 py-2 bg-gray-800 text-white"
               />
@@ -263,7 +289,9 @@ export default function ExercicioDashboard() {
                 type="text"
                 placeholder="Grupo Muscular"
                 value={form.Grupo_Muscular}
-                onChange={(e) => setForm({ ...form, Grupo_Muscular: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, Grupo_Muscular: e.target.value })
+                }
                 required
                 className="w-full border border-gray-700 rounded-xl px-4 py-2 bg-gray-800 text-white"
               />
@@ -277,7 +305,9 @@ export default function ExercicioDashboard() {
               <textarea
                 placeholder="Descrição"
                 value={form.Descricao}
-                onChange={(e) => setForm({ ...form, Descricao: e.target.value })}
+                onChange={(e) =>
+                  setForm({ ...form, Descricao: e.target.value })
+                }
                 className="w-full border border-gray-700 rounded-xl px-4 py-2 bg-gray-800 text-white resize-none"
               />
               <input
@@ -329,13 +359,17 @@ export default function ExercicioDashboard() {
               <input
                 type="text"
                 value={editModal.nome}
-                onChange={(e) => setEditModal({ ...editModal, nome: e.target.value })}
+                onChange={(e) =>
+                  setEditModal({ ...editModal, nome: e.target.value })
+                }
                 className="w-full border border-gray-700 rounded-xl px-4 py-2 bg-gray-800 text-white"
               />
               <input
                 type="text"
                 value={editModal.Categoria}
-                onChange={(e) => setEditModal({ ...editModal, Categoria: e.target.value })}
+                onChange={(e) =>
+                  setEditModal({ ...editModal, Categoria: e.target.value })
+                }
                 className="w-full border border-gray-700 rounded-xl px-4 py-2 bg-gray-800 text-white"
               />
               <input
@@ -348,7 +382,9 @@ export default function ExercicioDashboard() {
               />
               <textarea
                 value={editModal.Descricao}
-                onChange={(e) => setEditModal({ ...editModal, Descricao: e.target.value })}
+                onChange={(e) =>
+                  setEditModal({ ...editModal, Descricao: e.target.value })
+                }
                 className="w-full border border-gray-700 rounded-xl px-4 py-2 bg-gray-800 text-white resize-none"
               />
 

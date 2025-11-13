@@ -12,8 +12,8 @@ const HomePage = () => {
           Treinei <span className="text-blue-500">Fitness</span>
         </h1>
         <nav className="flex space-x-6 text-gray-700">
-          <a href="#treinos" className="hover:text-blue-500 transition">Treinos</a>
-          <a href="#dieta" className="hover:text-blue-500 transition">Dieta</a>
+          <a href="/treino-dias" className="hover:text-blue-500 transition">TreinosDias</a>
+          <a href="/treinos" className="hover:text-blue-500 transition">Treinos</a>
           <a href="/exercicios" className="hover:text-blue-500 transition">Exercicios</a>
           <a href="/auth" className="hover:text-blue-500 transition">Login</a>
           
