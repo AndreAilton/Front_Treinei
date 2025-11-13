@@ -1,44 +1,34 @@
 // src/services/authService.js
+import axios from "axios";
+
 const API_BASE_URL = "http://localhost:3000";
 
 export const registerTrainer = async (nome, email, password) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/Treinadores`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ nome, email, password }), // 👈 corrigido aqui
+    const response = await axios.post(`${API_BASE_URL}/Treinadores`, {
+      nome,
+      email,
+      password,
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || "Erro ao registrar treinador");
-    }
-
-    return await response.json();
+    return response.data; // axios já converte o JSON automaticamente
   } catch (error) {
     console.error("Erro no registro:", error);
-    throw error;
+    // tratamento de erro consistente
+    const message =
+      error.response?.data?.message || "Erro ao registrar treinador";
+    throw new Error(message);
   }
 };
 
 export const loginTrainer = async (email, password) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/token/treinador`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }), // 👈 corrigido também
+    const response = await axios.post(`${API_BASE_URL}/token/treinador`, {
+      email,
+      password,
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || "Erro ao fazer login");
-    }
-
-    const data = await response.json();
+    const data = response.data;
 
     if (data.token) {
       localStorage.setItem("token", data.token);
@@ -47,6 +37,7 @@ export const loginTrainer = async (email, password) => {
     return data;
   } catch (error) {
     console.error("Erro no login:", error);
-    throw error;
+    const message = error.response?.data?.message || "Erro ao fazer login";
+    throw new Error(message);
   }
 };

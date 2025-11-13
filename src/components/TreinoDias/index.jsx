@@ -22,6 +22,26 @@ export default function TreinoDias() {
     treinoSearch: "",
   });
 
+  // 🔹 Estado do modal
+  const [selectedExercicio, setSelectedExercicio] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const abrirModal = (exercicio) => {
+    setSelectedExercicio(exercicio);
+    setIsModalOpen(true);
+  };
+
+  const fecharModal = () => {
+    setIsModalOpen(false);
+    setSelectedExercicio(null);
+  };
+
+  const handleBackgroundClick = (e) => {
+    if (e.target.id === "modalBackground") {
+      fecharModal();
+    }
+  };
+
   const diasSemana = [
     "Segunda-Feira",
     "Terça-Feira",
@@ -54,49 +74,35 @@ export default function TreinoDias() {
     loadData();
   }, []);
 
-  // 🔹 Buscar os TreinoDias do backend filtrando pelo treino selecionado
+  // 🔹 Buscar TreinoDias do backend
   useEffect(() => {
     if (!treinoSelecionado) return;
 
     const fetchTreinoDias = async () => {
-      console.log("🔹 Buscando todos os TreinoDias...");
       try {
         const data = await getTreinoDias();
-        console.log("💡 Todos TreinoDias do backend:", data);
-
         const diasMap = {};
         diasSemana.forEach((dia) => (diasMap[dia] = []));
 
-        // 🔸 Filtra apenas os registros do treino selecionado
         const filtrados = data.filter(
           (item) => item.id_Treino === Number(treinoSelecionado)
         );
-        console.log("🎯 Filtrados por treino:", filtrados);
 
-        // 🔸 Monta os dias da semana
         filtrados.forEach((item) => {
           const dia = item.Dia_da_Semana?.trim();
           if (diasMap[dia]) {
             const exercicioInfo =
               exercicios.find((ex) => ex.id === item.id_Exercicio) || {};
             diasMap[dia].push({
-              id: item.id_Exercicio,
-              nome:
-                exercicioInfo.nome || `Exercício ${item.id_Exercicio || "?"}`,
-              Categoria: exercicioInfo.Categoria || "",
-              Grupo_Muscular: exercicioInfo.Grupo_Muscular || "",
+              ...exercicioInfo,
+              idTreinoDia: item.id,
               Series: item.Series,
               Repeticoes: item.Repeticoes,
               Descanso: item.Descanso,
               Observacoes: item.Observacoes,
-              idTreinoDia: item.id,
             });
-          } else {
-            console.warn(`⚠️ Dia inválido retornado: ${item.Dia_da_Semana}`);
           }
         });
-
-        console.log("✅ Dias organizados:", diasMap);
         setTreinoDias(diasMap);
       } catch (err) {
         console.error("❌ Erro ao buscar TreinoDias:", err);
@@ -104,7 +110,7 @@ export default function TreinoDias() {
     };
 
     fetchTreinoDias();
-  }, [treinoSelecionado, exercicios]); // refaz busca ao trocar treino
+  }, [treinoSelecionado, exercicios]);
 
   // 🔹 Filtros de exercícios
   useEffect(() => {
@@ -121,7 +127,6 @@ export default function TreinoDias() {
       filtered = filtered.filter((ex) => ex.Grupo_Muscular === filters.grupo);
     }
 
-    // 🔸 Remove os que já estão nos dias
     const idsNaSemana = Object.values(treinoDias)
       .flat()
       .map((ex) => ex.id);
@@ -141,17 +146,14 @@ export default function TreinoDias() {
     const jaExisteNoDia = (dia, exId) =>
       newTreino[dia].some((ex) => ex.id === exId);
 
-    console.log("➡️ Drag Start:", source.droppableId, "→", destination.droppableId);
-
-    // 🔸 Arrastando de um dia para o painel superior (remoção)
-    if (source.droppableId !== "exercicios" && destination.droppableId === "exercicios") {
+    if (
+      source.droppableId !== "exercicios" &&
+      destination.droppableId === "exercicios"
+    ) {
       const diaOrigem = source.droppableId;
       const [exercicioRemovido] = newTreino[diaOrigem].splice(source.index, 1);
-      console.log("🗑️ Removendo treinoDia:", exercicioRemovido);
-
       setTreinoDias(newTreino);
 
-      // Confirmação antes de deletar
       const confirmar = window.confirm(
         `Deseja realmente remover o exercício "${exercicioRemovido.nome}" do treino?`
       );
@@ -159,18 +161,13 @@ export default function TreinoDias() {
       if (confirmar && exercicioRemovido?.idTreinoDia) {
         try {
           await deleteTreinoDia(exercicioRemovido.idTreinoDia);
-          console.log("✅ TreinoDia removido com sucesso!");
         } catch (err) {
           console.error("❌ Erro ao remover treino-dia:", err);
         }
-      } else {
-        console.log("❎ Exclusão cancelada.");
       }
-
       return;
     }
 
-    // 🔸 Arrastando do painel de exercícios para um dia
     if (source.droppableId === "exercicios") {
       const exercicioMovido = filteredExercicios[source.index];
       if (jaExisteNoDia(destination.droppableId, exercicioMovido.id)) return;
@@ -194,13 +191,10 @@ export default function TreinoDias() {
             exercicioMovido.Observacoes || "Executar com carga moderada",
         });
         exercicioMovido.idTreinoDia = novoRegistro.id;
-        console.log("✅ Novo treino-dia criado:", novoRegistro);
       } catch (err) {
         console.error("❌ Erro ao criar treino-dia:", err);
       }
-    }
-    // 🔸 Movendo entre dias diferentes
-    else if (source.droppableId !== destination.droppableId) {
+    } else if (source.droppableId !== destination.droppableId) {
       const [moved] = newTreino[source.droppableId].splice(source.index, 1);
       if (jaExisteNoDia(destination.droppableId, moved.id)) return;
 
@@ -219,13 +213,10 @@ export default function TreinoDias() {
           Observacoes: moved.Observacoes || "Executar com carga moderada",
         });
         moved.idTreinoDia = novoRegistro.id;
-        console.log("🔁 Movido e recriado treino-dia:", novoRegistro);
       } catch (err) {
         console.error("❌ Erro ao mover treino-dia:", err);
       }
-    }
-    // 🔸 Reordenando dentro do mesmo dia
-    else {
+    } else {
       const diaAtual = Array.from(newTreino[source.droppableId]);
       const [reordered] = diaAtual.splice(source.index, 1);
       diaAtual.splice(destination.index, 0, reordered);
@@ -240,7 +231,6 @@ export default function TreinoDias() {
   const grupos = Array.from(
     new Set(exercicios.map((ex) => ex.Grupo_Muscular).filter(Boolean))
   );
-  const diasVisiveis = filters.diaSemana ? [filters.diaSemana] : diasSemana;
 
   // 🔹 Renderização
   return (
@@ -283,170 +273,152 @@ export default function TreinoDias() {
           </select>
         </div>
 
-        {/* 🔹 Quando nenhum treino selecionado */}
-        {!treinoSelecionado ? (
-          <div className="flex flex-col items-center justify-center text-center h-[60vh] px-4">
-            <p className="text-gray-600 text-lg">
-              ⚠️ Escolha um treino antes de montar sua semana.
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* 🔹 Filtros */}
-            <div className="flex flex-wrap gap-3 mb-6 justify-center">
-              <input
-                type="text"
-                placeholder="Buscar exercício..."
-                value={filters.search}
-                onChange={(e) =>
-                  setFilters({ ...filters, search: e.target.value })
-                }
-                className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none"
-              />
-              <select
-                value={filters.categoria}
-                onChange={(e) =>
-                  setFilters({ ...filters, categoria: e.target.value })
-                }
-                className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none"
-              >
-                <option value="">Todas as Categorias</option>
-                {categorias.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={filters.grupo}
-                onChange={(e) =>
-                  setFilters({ ...filters, grupo: e.target.value })
-                }
-                className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none"
-              >
-                <option value="">Todos os Grupos</option>
-                {grupos.map((grp) => (
-                  <option key={grp} value={grp}>
-                    {grp}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={filters.diaSemana}
-                onChange={(e) =>
-                  setFilters({ ...filters, diaSemana: e.target.value })
-                }
-                className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none"
-              >
-                <option value="">Todos os Dias</option>
-                {diasSemana.map((dia) => (
-                  <option key={dia} value={dia}>
-                    {dia}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* 🔹 Drag & Drop */}
-            <DragDropContext onDragEnd={onDragEnd}>
-              {/* Lista de Exercícios */}
-              <Droppable droppableId="exercicios">
-                {(provided) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-8 flex flex-wrap gap-4 justify-center overflow-y-auto"
-                    style={{ maxHeight: "250px" }}
-                  >
-                    {filteredExercicios.map((ex, index) => (
-                      <Draggable
-                        key={ex.id}
-                        draggableId={ex.id.toString()}
-                        index={index}
-                      >
-                        {(provided) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            className="w-[180px] sm:w-[200px] bg-white border border-gray-300 rounded-xl p-3 shadow hover:shadow-lg transition-all cursor-grab"
-                          >
-                            <h3 className="font-semibold text-gray-800 truncate">
-                              {ex.nome}
-                            </h3>
-                            <p className="text-sm text-gray-500">
-                              {ex.Grupo_Muscular}
-                            </p>
-                            <p className="text-xs text-gray-400">
-                              {ex.Categoria}
-                            </p>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-
-              {/* Grade da Semana */}
-              <div className="flex-grow overflow-y-auto">
+        {/* 🔹 Lista de Exercícios e Dias */}
+        {treinoSelecionado && (
+          <DragDropContext onDragEnd={onDragEnd}>
+            {/* Painel de Exercícios */}
+            <Droppable droppableId="exercicios">
+              {(provided) => (
                 <div
-                  className={`grid ${
-                    filters.diaSemana
-                      ? "grid-cols-1"
-                      : "grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7"
-                  } gap-4`}
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-8 flex flex-wrap gap-4 justify-center overflow-y-auto"
+                  style={{ maxHeight: "250px" }}
                 >
-                  {diasSemana
-                    .filter(
-                      (dia) => !filters.diaSemana || filters.diaSemana === dia
-                    )
-                    .map((dia) => (
-                      <Droppable key={dia} droppableId={dia}>
-                        {(provided) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.droppableProps}
-                            className="bg-gray-100 border border-gray-300 rounded-xl p-3 flex flex-col shadow-inner min-h-[250px] sm:min-h-[350px]"
-                          >
-                            <h3 className="font-bold text-blue-700 text-center mb-2">
-                              {dia}
-                            </h3>
-                            {(treinoDias[dia] || []).map((ex, index) => (
-                              <Draggable
-                                key={`${dia}-${ex.id}`}
-                                draggableId={`${dia}-${ex.id}`}
-                                index={index}
-                              >
-                                {(provided) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    {...provided.dragHandleProps}
-                                    className="bg-white border border-gray-200 rounded-lg p-2 mb-2 shadow cursor-grab hover:shadow-md transition-all"
-                                  >
-                                    <p className="font-medium text-gray-800 truncate">
-                                      {ex.nome}
-                                    </p>
-                                    <p className="text-xs text-gray-500">
-                                      {ex.Categoria}
-                                    </p>
-                                  </div>
-                                )}
-                              </Draggable>
-                            ))}
-                            {provided.placeholder}
-                          </div>
-                        )}
-                      </Droppable>
-                    ))}
+                  {filteredExercicios.map((ex, index) => (
+                    <Draggable
+                      key={ex.id}
+                      draggableId={ex.id.toString()}
+                      index={index}
+                    >
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          onDoubleClick={() => abrirModal(ex)} // 👈 duplo clique
+                          className="w-[180px] sm:w-[200px] bg-white border border-gray-300 rounded-xl p-3 shadow hover:shadow-lg transition-all cursor-grab"
+                        >
+                          <h3 className="font-semibold text-gray-800 truncate">
+                            {ex.nome}
+                          </h3>
+                          <p className="text-sm text-gray-500">
+                            {ex.Grupo_Muscular}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {ex.Categoria}
+                          </p>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
                 </div>
-              </div>
-            </DragDropContext>
-          </>
+              )}
+            </Droppable>
+
+            {/* Grade da Semana */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+              {diasSemana.map((dia) => (
+                <Droppable key={dia} droppableId={dia}>
+                  {(provided) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className="bg-gray-100 border border-gray-300 rounded-xl p-3 flex flex-col shadow-inner min-h-[250px]"
+                    >
+                      <h3 className="font-bold text-blue-700 text-center mb-2">
+                        {dia}
+                      </h3>
+                      {(treinoDias[dia] || []).map((ex, index) => (
+                        <Draggable
+                          key={`${dia}-${ex.id}`}
+                          draggableId={`${dia}-${ex.id}`}
+                          index={index}
+                        >
+                          {(provided) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              onDoubleClick={() => abrirModal(ex)} // 👈 aqui também
+                              className="bg-white border border-gray-200 rounded-lg p-2 mb-2 shadow cursor-grab hover:shadow-md transition-all"
+                            >
+                              <p className="font-medium text-gray-800 truncate">
+                                {ex.nome}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {ex.Categoria}
+                              </p>
+                            </div>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              ))}
+            </div>
+          </DragDropContext>
         )}
       </div>
+
+      {/* 🔹 MODAL DE EXERCÍCIO */}
+       {console.log(selectedExercicio)}
+      {isModalOpen && selectedExercicio && (
+        <div
+          id="modalBackground"
+          onClick={handleBackgroundClick}
+          className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50"
+        >
+          <div
+            className="bg-white rounded-2xl p-6 w-11/12 max-w-lg shadow-xl relative animate-fadeIn"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={fecharModal}
+              className="absolute top-3 right-4 text-gray-500 hover:text-gray-700 text-2xl"
+            >
+              ✕
+            </button>
+
+            <h2 className="text-2xl font-bold text-blue-700 mb-4">
+              {selectedExercicio.nome}
+            </h2>
+           
+
+            {selectedExercicio.videos && selectedExercicio.videos.length > 0 ? (
+              <video
+                src={`http://${selectedExercicio.videos[0].url.replace(
+                  /^https?:\/\//,
+                  ""
+                )}`}
+                controls
+                className="w-full rounded-lg mb-4"
+              />
+            ) : (
+              <p className="text-gray-400 italic mb-4">
+                🎥 Nenhum vídeo disponível
+              </p>
+            )}
+
+            <p>
+              <strong>Categoria:</strong> {selectedExercicio.Categoria}
+            </p>
+            <p>
+              <strong>Grupo Muscular:</strong>{" "}
+              {selectedExercicio.Grupo_Muscular}
+            </p>
+
+            {selectedExercicio.Observacoes && (
+              <p className="mt-3 text-gray-600">
+                <strong>Observações:</strong> {selectedExercicio.Observacoes}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
