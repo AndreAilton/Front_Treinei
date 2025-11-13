@@ -4,6 +4,8 @@ import Auth from "./components/TrainerLogin";
 import DashBoard from "./components/ExercicioDashboard";
 import TreinosDashboard from "./components/TreinosDashboard";
 import TreinoDias from "./components/TreinoDias";
+import VincularTreinoUsuario from "./components/VincularTreinoUsuario";
+import AuthUsuario from "./components/UsuarioAuth";
 export default function MainRoutes() {
   return (
     <Routes>
@@ -12,6 +14,8 @@ export default function MainRoutes() {
       <Route path="/exercicios" element={<DashBoard />} />
       <Route path="/treinos" element={<TreinosDashboard />} />
       <Route path="/treino-dias" element={<TreinoDias />} />
+      <Route path="/vincular-treino-usuario" element={<VincularTreinoUsuario />} />
+      <Route path="/auth-usuario" element={<AuthUsuario />} />
     </Routes>
   );
 }
