@@ -234,8 +234,8 @@ export default function TreinoDias() {
 
   // 🔹 Renderização
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 p-4 md:p-8 flex flex-col">
-      <div className="flex flex-col flex-grow max-w-8xl mx-auto w-full bg-white shadow-xl rounded-2xl p-6 md:p-8 border border-gray-200 overflow-hidden">
+    <div className="min-h-screen  from-blue-50 to-gray-100 p-4 md:p-8 flex flex-col">
+      <div className="flex flex-col  max-w-8xl mx-auto w-full bg-white shadow-xl rounded-2xl p-6 md:p-8 border border-gray-200 overflow-hidden">
         <h1 className="text-3xl font-bold text-blue-700 mb-6 text-center">
           🧩 Montar Treino da Semana
         </h1>
@@ -370,7 +370,7 @@ export default function TreinoDias() {
         <div
           id="modalBackground"
           onClick={handleBackgroundClick}
-          className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
         >
           <div
             className="bg-white rounded-2xl p-6 w-11/12 max-w-lg shadow-xl relative animate-fadeIn"
