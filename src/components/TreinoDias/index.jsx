@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { getExercicios } from "../../services/ExerciciosService";
 import { getTreinos } from "../../services/TreinosService";
-import { createTreinoDia, getTreinoDias, deleteTreinoDia } from "../../services/TreinoDiasService";
+import {
+  createTreinoDia,
+  getTreinoDias,
+  deleteTreinoDia,
+} from "../../services/TreinoDiasService";
 
 export default function TreinoDias() {
   const [exercicios, setExercicios] = useState([]);
@@ -32,58 +36,75 @@ export default function TreinoDias() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [exData, trData] = await Promise.all([getExercicios(), getTreinos()]);
+        const [exData, trData] = await Promise.all([
+          getExercicios(),
+          getTreinos(),
+        ]);
         setExercicios(exData || []);
         setFilteredExercicios(exData || []);
         setTreinos(trData || []);
 
-        // Inicializa dias vazios
         const initDias = {};
         diasSemana.forEach((d) => (initDias[d] = []));
         setTreinoDias(initDias);
       } catch (err) {
-        console.error("Erro ao carregar dados:", err);
+        console.error("❌ Erro ao carregar dados iniciais:", err);
       }
     };
     loadData();
   }, []);
 
-  // 🔹 Carrega os exercícios de um treino selecionado
+  // 🔹 Buscar os TreinoDias do backend filtrando pelo treino selecionado
   useEffect(() => {
+    if (!treinoSelecionado) return;
+
     const fetchTreinoDias = async () => {
-      if (!treinoSelecionado) return;
+      console.log("🔹 Buscando todos os TreinoDias...");
       try {
-        const data = await getTreinoDias(treinoSelecionado);
+        const data = await getTreinoDias();
+        console.log("💡 Todos TreinoDias do backend:", data);
 
-        const initDias = {};
-        diasSemana.forEach((dia) => (initDias[dia] = []));
+        const diasMap = {};
+        diasSemana.forEach((dia) => (diasMap[dia] = []));
 
-        // Monta os dias com os exercícios vindos do banco
-        data.forEach((item) => {
-          const dia = item.Dia_da_Semana;
-          if (initDias[dia]) {
-            initDias[dia].push({
+        // 🔸 Filtra apenas os registros do treino selecionado
+        const filtrados = data.filter(
+          (item) => item.id_Treino === Number(treinoSelecionado)
+        );
+        console.log("🎯 Filtrados por treino:", filtrados);
+
+        // 🔸 Monta os dias da semana
+        filtrados.forEach((item) => {
+          const dia = item.Dia_da_Semana?.trim();
+          if (diasMap[dia]) {
+            const exercicioInfo =
+              exercicios.find((ex) => ex.id === item.id_Exercicio) || {};
+            diasMap[dia].push({
               id: item.id_Exercicio,
-              nome: item.nome,
-              Categoria: item.Categoria,
-              Grupo_Muscular: item.Grupo_Muscular,
+              nome:
+                exercicioInfo.nome || `Exercício ${item.id_Exercicio || "?"}`,
+              Categoria: exercicioInfo.Categoria || "",
+              Grupo_Muscular: exercicioInfo.Grupo_Muscular || "",
               Series: item.Series,
               Repeticoes: item.Repeticoes,
               Descanso: item.Descanso,
               Observacoes: item.Observacoes,
-              idTreinoDia: item.id, // salva o id real do registro no banco
+              idTreinoDia: item.id,
             });
+          } else {
+            console.warn(`⚠️ Dia inválido retornado: ${item.Dia_da_Semana}`);
           }
         });
 
-        setTreinoDias(initDias);
+        console.log("✅ Dias organizados:", diasMap);
+        setTreinoDias(diasMap);
       } catch (err) {
-        console.error("Erro ao carregar treino selecionado:", err);
+        console.error("❌ Erro ao buscar TreinoDias:", err);
       }
     };
 
     fetchTreinoDias();
-  }, [treinoSelecionado]);
+  }, [treinoSelecionado, exercicios]); // refaz busca ao trocar treino
 
   // 🔹 Filtros de exercícios
   useEffect(() => {
@@ -99,98 +120,98 @@ export default function TreinoDias() {
     if (filters.grupo) {
       filtered = filtered.filter((ex) => ex.Grupo_Muscular === filters.grupo);
     }
-    setFilteredExercicios(filtered);
-  }, [filters, exercicios]);
 
-  const categorias = Array.from(new Set(exercicios.map((ex) => ex.Categoria).filter(Boolean)));
-  const grupos = Array.from(new Set(exercicios.map((ex) => ex.Grupo_Muscular).filter(Boolean)));
+    // 🔸 Remove os que já estão nos dias
+    const idsNaSemana = Object.values(treinoDias)
+      .flat()
+      .map((ex) => ex.id);
+    filtered = filtered.filter((ex) => !idsNaSemana.includes(ex.id));
+
+    setFilteredExercicios(filtered);
+  }, [filters, exercicios, treinoDias]);
 
   // 🔹 Drag & Drop
-const onDragEnd = async (result) => {
-  const { source, destination } = result;
-  if (!destination) return;
-  if (!treinoSelecionado) return alert("⚠️ Selecione um treino antes de montar a semana!");
+  const onDragEnd = async (result) => {
+    const { source, destination } = result;
+    if (!destination) return;
+    if (!treinoSelecionado)
+      return alert("⚠️ Selecione um treino antes de montar a semana!");
 
-  const newTreino = { ...treinoDias };
-  let exercicioMovido = null;
+    const newTreino = { ...treinoDias };
+    const jaExisteNoDia = (dia, exId) =>
+      newTreino[dia].some((ex) => ex.id === exId);
 
-  // 🔹 Função auxiliar para verificar se já existe no dia
-  const jaExisteNoDia = (dia, exId) => newTreino[dia].some((ex) => ex.id === exId);
+    // 🔸 Arrastando do painel de exercícios para um dia
+    if (source.droppableId === "exercicios") {
+      const exercicioMovido = filteredExercicios[source.index];
+      if (jaExisteNoDia(destination.droppableId, exercicioMovido.id)) return;
 
-  // 🔹 Arrastando do painel de exercícios para um dia
-  if (source.droppableId === "exercicios" && destination.droppableId !== "exercicios") {
-    exercicioMovido = filteredExercicios[source.index];
+      newTreino[destination.droppableId].splice(
+        destination.index,
+        0,
+        exercicioMovido
+      );
+      setTreinoDias(newTreino);
 
-    if (jaExisteNoDia(destination.droppableId, exercicioMovido.id)) {
-      return alert("⚠️ Este exercício já está nesse dia da semana!");
-    }
-
-    newTreino[destination.droppableId].splice(destination.index, 0, exercicioMovido);
-    setTreinoDias(newTreino);
-
-    try {
-      const novoRegistro = await createTreinoDia({
-        id_Treino: Number(treinoSelecionado),
-        Dia_da_Semana: destination.droppableId,
-        id_Exercicio: exercicioMovido.id,
-        Series: exercicioMovido.Series || 4,
-        Repeticoes: exercicioMovido.Repeticoes || 12,
-        Descanso: exercicioMovido.Descanso || 60,
-        Observacoes: exercicioMovido.Observacoes || "Executar com carga moderada",
-      });
-      exercicioMovido.idTreinoDia = novoRegistro.id;
-    } catch (err) {
-      console.error("❌ Erro ao criar treino-dia:", err);
-    }
-  }
-
-  // 🔹 Movendo entre dias diferentes
-  else if (source.droppableId !== destination.droppableId) {
-    const [moved] = newTreino[source.droppableId].splice(source.index, 1);
-
-    if (jaExisteNoDia(destination.droppableId, moved.id)) {
-      return alert("⚠️ Este exercício já está nesse dia da semana!");
-    }
-
-    newTreino[destination.droppableId].splice(destination.index, 0, moved);
-    setTreinoDias(newTreino);
-    exercicioMovido = moved;
-
-    try {
-      // Apaga do dia de origem
-      if (moved.idTreinoDia) {
-        await deleteTreinoDia(moved.idTreinoDia);
+      try {
+        const novoRegistro = await createTreinoDia({
+          id_Treino: Number(treinoSelecionado),
+          Dia_da_Semana: destination.droppableId,
+          id_Exercicio: exercicioMovido.id,
+          Series: exercicioMovido.Series || 4,
+          Repeticoes: exercicioMovido.Repeticoes || 12,
+          Descanso: exercicioMovido.Descanso || 60,
+          Observacoes:
+            exercicioMovido.Observacoes || "Executar com carga moderada",
+        });
+        exercicioMovido.idTreinoDia = novoRegistro.id;
+      } catch (err) {
+        console.error("❌ Erro ao criar treino-dia:", err);
       }
-
-      // Cria no dia de destino
-      const novoRegistro = await createTreinoDia({
-        id_Treino: Number(treinoSelecionado),
-        Dia_da_Semana: destination.droppableId,
-        id_Exercicio: moved.id,
-        Series: moved.Series || 4,
-        Repeticoes: moved.Repeticoes || 12,
-        Descanso: moved.Descanso || 60,
-        Observacoes: moved.Observacoes || "Executar com carga moderada",
-      });
-      moved.idTreinoDia = novoRegistro.id;
-    } catch (err) {
-      console.error("❌ Erro ao mover treino-dia:", err);
     }
-  }
+    // 🔸 Movendo entre dias diferentes
+    else if (source.droppableId !== destination.droppableId) {
+      const [moved] = newTreino[source.droppableId].splice(source.index, 1);
+      if (jaExisteNoDia(destination.droppableId, moved.id)) return;
 
-  // 🔹 Reordenando dentro do mesmo dia
-  else {
-    const diaAtual = Array.from(newTreino[source.droppableId]);
-    const [reordered] = diaAtual.splice(source.index, 1);
-    diaAtual.splice(destination.index, 0, reordered);
-    newTreino[source.droppableId] = diaAtual;
-    setTreinoDias(newTreino);
-  }
-};
+      newTreino[destination.droppableId].splice(destination.index, 0, moved);
+      setTreinoDias(newTreino);
 
+      try {
+        if (moved.idTreinoDia) await deleteTreinoDia(moved.idTreinoDia);
+        const novoRegistro = await createTreinoDia({
+          id_Treino: Number(treinoSelecionado),
+          Dia_da_Semana: destination.droppableId,
+          id_Exercicio: moved.id,
+          Series: moved.Series || 4,
+          Repeticoes: moved.Repeticoes || 12,
+          Descanso: moved.Descanso || 60,
+          Observacoes: moved.Observacoes || "Executar com carga moderada",
+        });
+        moved.idTreinoDia = novoRegistro.id;
+      } catch (err) {
+        console.error("❌ Erro ao mover treino-dia:", err);
+      }
+    }
+    // 🔸 Reordenando dentro do mesmo dia
+    else {
+      const diaAtual = Array.from(newTreino[source.droppableId]);
+      const [reordered] = diaAtual.splice(source.index, 1);
+      diaAtual.splice(destination.index, 0, reordered);
+      newTreino[source.droppableId] = diaAtual;
+      setTreinoDias(newTreino);
+    }
+  };
 
+  const categorias = Array.from(
+    new Set(exercicios.map((ex) => ex.Categoria).filter(Boolean))
+  );
+  const grupos = Array.from(
+    new Set(exercicios.map((ex) => ex.Grupo_Muscular).filter(Boolean))
+  );
   const diasVisiveis = filters.diaSemana ? [filters.diaSemana] : diasSemana;
 
+  // 🔹 Renderização
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100 p-4 md:p-8 flex flex-col">
       <div className="flex flex-col flex-grow max-w-8xl mx-auto w-full bg-white shadow-xl rounded-2xl p-6 md:p-8 border border-gray-200 overflow-hidden">
@@ -204,10 +225,11 @@ const onDragEnd = async (result) => {
             type="text"
             placeholder="Buscar treino..."
             value={filters.treinoSearch || ""}
-            onChange={(e) => setFilters({ ...filters, treinoSearch: e.target.value })}
+            onChange={(e) =>
+              setFilters({ ...filters, treinoSearch: e.target.value })
+            }
             className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none"
           />
-
           <select
             value={treinoSelecionado}
             onChange={(e) => setTreinoSelecionado(e.target.value)}
@@ -218,7 +240,9 @@ const onDragEnd = async (result) => {
               .filter((t) =>
                 !filters.treinoSearch
                   ? true
-                  : t.nome?.toLowerCase().includes(filters.treinoSearch.toLowerCase())
+                  : t.nome
+                      ?.toLowerCase()
+                      .includes(filters.treinoSearch.toLowerCase())
               )
               .map((t) => (
                 <option key={t.id} value={t.id}>
@@ -242,43 +266,44 @@ const onDragEnd = async (result) => {
                 type="text"
                 placeholder="Buscar exercício..."
                 value={filters.search}
-                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                onChange={(e) =>
+                  setFilters({ ...filters, search: e.target.value })
+                }
                 className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none"
               />
-
-              {categorias.length > 0 && (
-                <select
-                  value={filters.categoria}
-                  onChange={(e) => setFilters({ ...filters, categoria: e.target.value })}
-                  className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                >
-                  <option value="">Todas as Categorias</option>
-                  {categorias.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              )}
-
-              {grupos.length > 0 && (
-                <select
-                  value={filters.grupo}
-                  onChange={(e) => setFilters({ ...filters, grupo: e.target.value })}
-                  className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none"
-                >
-                  <option value="">Todos os Grupos</option>
-                  {grupos.map((grp) => (
-                    <option key={grp} value={grp}>
-                      {grp}
-                    </option>
-                  ))}
-                </select>
-              )}
-
+              <select
+                value={filters.categoria}
+                onChange={(e) =>
+                  setFilters({ ...filters, categoria: e.target.value })
+                }
+                className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none"
+              >
+                <option value="">Todas as Categorias</option>
+                {categorias.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={filters.grupo}
+                onChange={(e) =>
+                  setFilters({ ...filters, grupo: e.target.value })
+                }
+                className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none"
+              >
+                <option value="">Todos os Grupos</option>
+                {grupos.map((grp) => (
+                  <option key={grp} value={grp}>
+                    {grp}
+                  </option>
+                ))}
+              </select>
               <select
                 value={filters.diaSemana}
-                onChange={(e) => setFilters({ ...filters, diaSemana: e.target.value })}
+                onChange={(e) =>
+                  setFilters({ ...filters, diaSemana: e.target.value })
+                }
                 className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none"
               >
                 <option value="">Todos os Dias</option>
@@ -292,7 +317,7 @@ const onDragEnd = async (result) => {
 
             {/* 🔹 Drag & Drop */}
             <DragDropContext onDragEnd={onDragEnd}>
-              {/* 🔸 Lista de Exercícios */}
+              {/* Lista de Exercícios */}
               <Droppable droppableId="exercicios" isDropDisabled>
                 {(provided) => (
                   <div
@@ -302,7 +327,11 @@ const onDragEnd = async (result) => {
                     style={{ maxHeight: "250px" }}
                   >
                     {filteredExercicios.map((ex, index) => (
-                      <Draggable key={ex.id} draggableId={ex.id.toString()} index={index}>
+                      <Draggable
+                        key={ex.id}
+                        draggableId={ex.id.toString()}
+                        index={index}
+                      >
                         {(provided) => (
                           <div
                             ref={provided.innerRef}
@@ -316,7 +345,9 @@ const onDragEnd = async (result) => {
                             <p className="text-sm text-gray-500">
                               {ex.Grupo_Muscular}
                             </p>
-                            <p className="text-xs text-gray-400">{ex.Categoria}</p>
+                            <p className="text-xs text-gray-400">
+                              {ex.Categoria}
+                            </p>
                           </div>
                         )}
                       </Draggable>
@@ -326,7 +357,7 @@ const onDragEnd = async (result) => {
                 )}
               </Droppable>
 
-              {/* 🔸 Grade da Semana */}
+              {/* Grade da Semana */}
               <div className="flex-grow overflow-y-auto">
                 <div
                   className={`grid ${
@@ -343,31 +374,32 @@ const onDragEnd = async (result) => {
                           {...provided.droppableProps}
                           className="bg-gray-100 border border-gray-300 rounded-xl p-3 flex flex-col shadow-inner min-h-[250px] sm:min-h-[350px]"
                         >
-                          <h3 className="font-bold text-blue-700 text-center mb-2">{dia}</h3>
-
-                          {(treinoDias[dia] || [])
-                            .filter((ex) => ex && ex.id)
-                            .map((ex, index) => (
-                              <Draggable
-                                key={`${dia}-${ex.id}`}
-                                draggableId={`${dia}-${ex.id}`}
-                                index={index}
-                              >
-                                {(provided) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    {...provided.dragHandleProps}
-                                    className="bg-white border border-gray-200 rounded-lg p-2 mb-2 shadow cursor-grab hover:shadow-md transition-all"
-                                  >
-                                    <p className="font-medium text-gray-800 truncate">
-                                      {ex.nome}
-                                    </p>
-                                    <p className="text-xs text-gray-500">{ex.Categoria}</p>
-                                  </div>
-                                )}
-                              </Draggable>
-                            ))}
+                          <h3 className="font-bold text-blue-700 text-center mb-2">
+                            {dia}
+                          </h3>
+                          {(treinoDias[dia] || []).map((ex, index) => (
+                            <Draggable
+                              key={`${dia}-${ex.id}`}
+                              draggableId={`${dia}-${ex.id}`}
+                              index={index}
+                            >
+                              {(provided) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className="bg-white border border-gray-200 rounded-lg p-2 mb-2 shadow cursor-grab hover:shadow-md transition-all"
+                                >
+                                  <p className="font-medium text-gray-800 truncate">
+                                    {ex.nome}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {ex.Categoria}
+                                  </p>
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
                           {provided.placeholder}
                         </div>
                       )}

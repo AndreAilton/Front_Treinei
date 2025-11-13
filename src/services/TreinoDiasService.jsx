@@ -9,18 +9,18 @@ const getAuthHeader = () => {
 };
 
 // 🔹 Buscar todos os Treinos-Dias
-export const getTreinoDias = async (idTreino) => {
+export const getTreinoDias = async () => {
   try {
-    const response = await axios.get(`${API_URL}?id_Treino=${idTreino}`, {
+    const response = await axios.get(API_URL, {
       headers: getAuthHeader(),
     });
-    // Retorna o array de treinos do dia
-    return response.data.treinoDias || [];
+    return response.data.treinosDia || [];
   } catch (error) {
     console.error("Erro ao buscar Treinos-Dias:", error.response?.data || error);
     return [];
   }
 };
+
 
 // 🔹 Criar novo Treino-Dia
 export const createTreinoDia = async (treinoDiaData) => {
