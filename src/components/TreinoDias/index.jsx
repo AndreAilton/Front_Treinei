@@ -141,6 +141,35 @@ export default function TreinoDias() {
     const jaExisteNoDia = (dia, exId) =>
       newTreino[dia].some((ex) => ex.id === exId);
 
+    console.log("➡️ Drag Start:", source.droppableId, "→", destination.droppableId);
+
+    // 🔸 Arrastando de um dia para o painel superior (remoção)
+    if (source.droppableId !== "exercicios" && destination.droppableId === "exercicios") {
+      const diaOrigem = source.droppableId;
+      const [exercicioRemovido] = newTreino[diaOrigem].splice(source.index, 1);
+      console.log("🗑️ Removendo treinoDia:", exercicioRemovido);
+
+      setTreinoDias(newTreino);
+
+      // Confirmação antes de deletar
+      const confirmar = window.confirm(
+        `Deseja realmente remover o exercício "${exercicioRemovido.nome}" do treino?`
+      );
+
+      if (confirmar && exercicioRemovido?.idTreinoDia) {
+        try {
+          await deleteTreinoDia(exercicioRemovido.idTreinoDia);
+          console.log("✅ TreinoDia removido com sucesso!");
+        } catch (err) {
+          console.error("❌ Erro ao remover treino-dia:", err);
+        }
+      } else {
+        console.log("❎ Exclusão cancelada.");
+      }
+
+      return;
+    }
+
     // 🔸 Arrastando do painel de exercícios para um dia
     if (source.droppableId === "exercicios") {
       const exercicioMovido = filteredExercicios[source.index];
@@ -165,6 +194,7 @@ export default function TreinoDias() {
             exercicioMovido.Observacoes || "Executar com carga moderada",
         });
         exercicioMovido.idTreinoDia = novoRegistro.id;
+        console.log("✅ Novo treino-dia criado:", novoRegistro);
       } catch (err) {
         console.error("❌ Erro ao criar treino-dia:", err);
       }
@@ -189,6 +219,7 @@ export default function TreinoDias() {
           Observacoes: moved.Observacoes || "Executar com carga moderada",
         });
         moved.idTreinoDia = novoRegistro.id;
+        console.log("🔁 Movido e recriado treino-dia:", novoRegistro);
       } catch (err) {
         console.error("❌ Erro ao mover treino-dia:", err);
       }
@@ -252,6 +283,7 @@ export default function TreinoDias() {
           </select>
         </div>
 
+        {/* 🔹 Quando nenhum treino selecionado */}
         {!treinoSelecionado ? (
           <div className="flex flex-col items-center justify-center text-center h-[60vh] px-4">
             <p className="text-gray-600 text-lg">
@@ -318,7 +350,7 @@ export default function TreinoDias() {
             {/* 🔹 Drag & Drop */}
             <DragDropContext onDragEnd={onDragEnd}>
               {/* Lista de Exercícios */}
-              <Droppable droppableId="exercicios" isDropDisabled>
+              <Droppable droppableId="exercicios">
                 {(provided) => (
                   <div
                     ref={provided.innerRef}
@@ -366,45 +398,49 @@ export default function TreinoDias() {
                       : "grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7"
                   } gap-4`}
                 >
-                  {diasVisiveis.map((dia) => (
-                    <Droppable key={dia} droppableId={dia}>
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.droppableProps}
-                          className="bg-gray-100 border border-gray-300 rounded-xl p-3 flex flex-col shadow-inner min-h-[250px] sm:min-h-[350px]"
-                        >
-                          <h3 className="font-bold text-blue-700 text-center mb-2">
-                            {dia}
-                          </h3>
-                          {(treinoDias[dia] || []).map((ex, index) => (
-                            <Draggable
-                              key={`${dia}-${ex.id}`}
-                              draggableId={`${dia}-${ex.id}`}
-                              index={index}
-                            >
-                              {(provided) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  className="bg-white border border-gray-200 rounded-lg p-2 mb-2 shadow cursor-grab hover:shadow-md transition-all"
-                                >
-                                  <p className="font-medium text-gray-800 truncate">
-                                    {ex.nome}
-                                  </p>
-                                  <p className="text-xs text-gray-500">
-                                    {ex.Categoria}
-                                  </p>
-                                </div>
-                              )}
-                            </Draggable>
-                          ))}
-                          {provided.placeholder}
-                        </div>
-                      )}
-                    </Droppable>
-                  ))}
+                  {diasSemana
+                    .filter(
+                      (dia) => !filters.diaSemana || filters.diaSemana === dia
+                    )
+                    .map((dia) => (
+                      <Droppable key={dia} droppableId={dia}>
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                            className="bg-gray-100 border border-gray-300 rounded-xl p-3 flex flex-col shadow-inner min-h-[250px] sm:min-h-[350px]"
+                          >
+                            <h3 className="font-bold text-blue-700 text-center mb-2">
+                              {dia}
+                            </h3>
+                            {(treinoDias[dia] || []).map((ex, index) => (
+                              <Draggable
+                                key={`${dia}-${ex.id}`}
+                                draggableId={`${dia}-${ex.id}`}
+                                index={index}
+                              >
+                                {(provided) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    className="bg-white border border-gray-200 rounded-lg p-2 mb-2 shadow cursor-grab hover:shadow-md transition-all"
+                                  >
+                                    <p className="font-medium text-gray-800 truncate">
+                                      {ex.nome}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {ex.Categoria}
+                                    </p>
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
+                    ))}
                 </div>
               </div>
             </DragDropContext>
