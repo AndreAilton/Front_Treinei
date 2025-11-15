@@ -40,11 +40,9 @@ export const loginTrainer = async (email, password) => {
     if (data.token) {
       // ✅ Remove token do usuário para evitar conflito
       localStorage.removeItem("usuario_token");
-      localStorage.removeItem("usuario");
 
       // ✅ Armazena token e dados do treinador
       localStorage.setItem("trainer_token", data.token);
-      localStorage.setItem("trainer", JSON.stringify(data.treinador));
     }
 
     return data;

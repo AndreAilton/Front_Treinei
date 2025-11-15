@@ -4,7 +4,7 @@ import {
   createExercicio,
   deleteExercicio,
   updateExercicio,
-} from "../../services/ExerciciosService";
+} from "../../services/Treinador/ExerciciosService";
 
 export default function ExercicioDashboard() {
   const [exercicios, setExercicios] = useState([]);

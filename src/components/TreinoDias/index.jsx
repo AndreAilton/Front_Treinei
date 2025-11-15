@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { getExercicios } from "../../services/ExerciciosService";
-import { getTreinos } from "../../services/TreinosService";
+import { getExercicios } from "../../services/Treinador/ExerciciosService";
+import { getTreinos } from "../../services/Treinador/TreinosService";
 import {
   createTreinoDia,
   getTreinoDias,
   deleteTreinoDia,
-} from "../../services/TreinoDiasService";
+} from "../../services/Treinador/TreinoDiasService";
 
 export default function TreinoDias() {
   const [exercicios, setExercicios] = useState([]);
@@ -365,7 +365,7 @@ export default function TreinoDias() {
       </div>
 
       {/* 🔹 MODAL DE EXERCÍCIO */}
-       {console.log(selectedExercicio)}
+      {console.log(selectedExercicio)}
       {isModalOpen && selectedExercicio && (
         <div
           id="modalBackground"
@@ -386,7 +386,6 @@ export default function TreinoDias() {
             <h2 className="text-2xl font-bold text-blue-700 mb-4">
               {selectedExercicio.nome}
             </h2>
-           
 
             {selectedExercicio.videos && selectedExercicio.videos.length > 0 ? (
               <video

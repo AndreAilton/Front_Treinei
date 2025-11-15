@@ -4,8 +4,13 @@ const API_URL = "http://localhost:3000/usuario-treino";
 
 // 🔹 Recupera o token salvo no login
 const getAuthHeader = () => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("trainer_token");
   return { Authorization: `Bearer ${token}` };
+};
+
+const getAuthUser = () => {
+  const token = localStorage.getItem("usuario_token");
+   return { Authorization: `Bearer ${token}`}
 };
 
 // 🔹 Buscar todos os vínculos entre usuários e treinos
@@ -14,12 +19,30 @@ export const getTreinoUsuarios = async () => {
     const response = await axios.get(API_URL, {
       headers: getAuthHeader(),
     });
-    return response.data.usuarioTreinos || [];
+    return response.data.usuariosTreinos || [];
   } catch (error) {
     console.error("Erro ao buscar vínculos usuário-treino:", error.response?.data || error);
     return [];
   }
 };
+
+
+export const escolherTreinador = async (idTreinador) => {
+  try {
+    const response = await axios.post(
+      API_URL,
+      { id_Treinador: idTreinador },
+      { headers: getAuthUser() }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao registrar treinador:", error.response?.data || error);
+    throw error;
+  }
+};
+
+
 
 // 🔹 Criar um novo vínculo (associar usuário a treino)
 export const createTreinoUsuario = async (data) => {

@@ -1,6 +1,9 @@
 import React, { useState } from "react";
-import { loginUsuario, registerUsuario } from "../../services/usuarioAuthService";
-import { logoutTrainer } from "../../services/authService";
+import {
+  loginUsuario,
+  registerUsuario,
+} from "../../services/Usuario/usuarioAuthService";
+import { logoutTrainer } from "../../services/Treinador/authService";
 import { useNavigate } from "react-router-dom";
 
 const UsuarioAuth = () => {

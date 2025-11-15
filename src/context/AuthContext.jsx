@@ -1,6 +1,7 @@
 // src/context/AuthContext.jsx
 import { createContext, useState, useEffect } from "react";
-import { loginTrainer } from "../services/authService";
+import { loginTrainer } from "../services/Treinador/authService";
+import { getdadosTreinador } from "../services/Treinador/treinadorService";
 
 export const AuthContext = createContext();
 
@@ -30,8 +31,10 @@ export const AuthProvider = ({ children }) => {
       if (data.token) {
         setToken(data.token);
         setUser(data.treinador || { email });
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.treinador || { email }));
+        localStorage.setItem("trainer_token", data.token);
+        const treinador = await getdadosTreinador();
+        console.log("Dados do treinador:", treinador);
+        localStorage.setItem("trainer", JSON.stringify(treinador));
       }
     } catch (error) {
       throw error;
@@ -43,7 +46,6 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setToken(null);
     localStorage.removeItem("token");
-    localStorage.removeItem("user");
   };
 
   return (

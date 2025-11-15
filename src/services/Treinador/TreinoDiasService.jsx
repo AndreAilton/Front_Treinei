@@ -4,7 +4,7 @@ const API_URL = "http://localhost:3000/treinos-dias";
 
 // 🔹 Recupera o token salvo no login
 const getAuthHeader = () => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("trainer_token");
   return { Authorization: `Bearer ${token}` };
 };
 

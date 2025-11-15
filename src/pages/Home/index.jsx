@@ -1,11 +1,13 @@
-import React from "react";
-import {useNavigate} from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const [showLoginOptions, setShowLoginOptions] = useState(false);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
+      
       {/* Cabeçalho */}
       <header className="w-full max-w-6xl flex justify-between items-center mb-10">
         <h1 className="text-3xl font-bold text-gray-800">
@@ -18,9 +20,15 @@ const HomePage = () => {
           <a href="/treino-dias" className="hover:text-blue-500 transition">TreinosDias</a>
           <a href="/treinos" className="hover:text-blue-500 transition">Treinos</a>
           <a href="/exercicios" className="hover:text-blue-500 transition">Exercicios</a>
-          <a href="/auth" className="hover:text-blue-500 transition">Login</a>
-          
+          <a href="/escolher-treinador" className="hover:text-blue-500 transition">Escolher Treinador</a>
 
+          {/* Botão de Login abre o modal */}
+          <button
+            onClick={() => setShowLoginOptions(true)}
+            className="hover:text-blue-500 transition"
+          >
+            Login
+          </button>
         </nav>
       </header>
 
@@ -32,12 +40,14 @@ const HomePage = () => {
         <p className="text-lg text-gray-600 mb-8">
           Alcance seus objetivos com treinos personalizados, planos de dieta e acompanhamento do seu treinador.
         </p>
-        <a
-          href="/login"
+
+        {/* Botão "Começar Agora" abre o modal */}
+        <button
+          onClick={() => setShowLoginOptions(true)}
           className="bg-blue-500 text-white px-6 py-3 rounded-xl text-lg font-semibold hover:bg-blue-600 transition"
         >
           Começar Agora
-        </a>
+        </button>
       </section>
 
       {/* Benefícios */}
@@ -64,10 +74,43 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Rodapé */}
       <footer className="mt-16 text-gray-500 text-sm">
         © {new Date().getFullYear()} Treinei Fitness — Todos os direitos reservados.
       </footer>
+
+      {/* ===== MODAL DE LOGIN ===== */}
+      {showLoginOptions && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-opacity-90 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-8 shadow-lg max-w-sm w-full">
+            <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
+              Entrar como:
+            </h2>
+
+            <div className="flex flex-col space-y-4">
+              <button
+                onClick={() => navigate("/auth-usuario")}
+                className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition"
+              >
+                👤 Usuário
+              </button>
+
+              <button
+                onClick={() => navigate("/auth-treinador")}
+                className="w-full bg-orange-500 text-white py-3 rounded-xl font-semibold hover:bg-orange-600 transition"
+              >
+                🏋️ Treinador
+              </button>
+
+              <button
+                onClick={() => setShowLoginOptions(false)}
+                className="w-full bg-gray-200 text-gray-600 py-2 rounded-xl hover:bg-gray-300 transition"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

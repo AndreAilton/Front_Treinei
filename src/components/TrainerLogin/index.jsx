@@ -1,6 +1,6 @@
 import React, { useState, useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
-import { registerTrainer } from "../../services/authService";
+import { registerTrainer } from "../../services/Treinador/authService";
 import { useNavigate } from "react-router-dom";
 
 const TrainerAuth = () => {
@@ -38,14 +38,12 @@ const TrainerAuth = () => {
       setError("❌ Erro: " + (err.message || "Falha na requisição."));
     } finally {
       setLoading(false);
-      navigate("/");
     }
   };
 
   // Se já estiver logado, mostra mensagem de boas-vindas
   if (isAuthenticated) {
     navigate("/");
-    alert("✅ Treinador Autenticado Com Sucesso!");
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
         <h2 className="text-2xl font-semibold text-blue-600">
@@ -54,7 +52,6 @@ const TrainerAuth = () => {
         <p className="text-gray-500 mt-2">Você já está autenticado.</p>
       </div>
     );
-    
   }
 
   return (

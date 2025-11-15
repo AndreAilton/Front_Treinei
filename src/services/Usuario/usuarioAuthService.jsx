@@ -16,7 +16,7 @@ export const loginUsuario = async (email, password) => {
       // Ao logar o usuário, remove tokens de treinador
       localStorage.removeItem("trainer_token");
       localStorage.setItem("usuario_token", data.token);
-      localStorage.setItem("usuario", JSON.stringify(data.usuario));
+
     }
 
     return data;

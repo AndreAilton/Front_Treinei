@@ -4,7 +4,7 @@ import {
   createTreino,
   deleteTreino,
   updateTreino,
-} from "../../services/TreinosService";
+} from "../../services/Treinador/TreinosService";
 
 export default function TreinoDashboard() {
   const [treinos, setTreinos] = useState([]);
