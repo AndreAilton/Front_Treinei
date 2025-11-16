@@ -80,7 +80,7 @@ const HomePage = () => {
 
       {/* ===== MODAL DE LOGIN ===== */}
       {showLoginOptions && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-opacity-90 flex items-center justify-center p-4">
+        <div className="fixed inset-0 backdrop-blur-sm bg-opacity-90 flex items-center justify-center p-4" onClick={() => setShowLoginOptions(false)}>
           <div className="bg-white rounded-2xl p-8 shadow-lg max-w-sm w-full">
             <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
               Entrar como:

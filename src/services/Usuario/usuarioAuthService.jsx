@@ -7,6 +7,11 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+const getAuthHeader = () => {
+  const token = localStorage.getItem("usuario_token");
+  return { Authorization: `Bearer ${token}` };
+};
+
 // 🔹 Login de usuário
 export const loginUsuario = async (email, password) => {
   try {
@@ -44,6 +49,20 @@ export const registerUsuario = async (usuarioData) => {
     throw new Error(msg);
   }
 };
+
+export const getdadosUsuario = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/usuarios`, {
+      headers: getAuthHeader(),
+    });
+    return response.data.user || [];
+  } catch (error) {
+    console.error("Erro ao carregar Usuario", error.response?.data || error);
+    return [];
+  }
+};
+
+
 
 // 🔹 Logout
 export const logoutUsuario = () => {

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import { registerTrainer } from "../../services/Treinador/authService";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +13,13 @@ const TrainerAuth = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  // ✅ Redirecionar SOMENTE quando o isAuthenticated mudar
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/");
+    }
+  }, [isAuthenticated, navigate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -20,18 +27,14 @@ const TrainerAuth = () => {
 
     try {
       if (isLogin) {
-        // 🔹 LOGIN via Context (que usa o authService)
         await login(email, password);
         alert("✅ Login realizado com sucesso!");
       } else {
-        // 🔹 REGISTRO via Service
         await registerTrainer(nome, email, password);
         alert("✅ Registro realizado com sucesso!");
         setIsLogin(true);
+
         await login(email, password);
-        setNome("");
-        setEmail("");
-        setPassword("");
       }
     } catch (err) {
       console.error(err);
@@ -40,19 +43,6 @@ const TrainerAuth = () => {
       setLoading(false);
     }
   };
-
-  // Se já estiver logado, mostra mensagem de boas-vindas
-  if (isAuthenticated) {
-    navigate("/");
-    return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
-        <h2 className="text-2xl font-semibold text-blue-600">
-          👋 Bem-vindo, {user?.nome || user?.email}!
-        </h2>
-        <p className="text-gray-500 mt-2">Você já está autenticado.</p>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">

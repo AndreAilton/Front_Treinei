@@ -1,12 +1,11 @@
-import React, { useState } from "react";
-import {
-  loginUsuario,
-  registerUsuario,
-} from "../../services/Usuario/usuarioAuthService";
-import { logoutTrainer } from "../../services/Treinador/authService";
+import React, { useState, useContext, useEffect } from "react";
+import { AuthContext} from "../../context/AuthContext";
+import { registerUsuario } from "../../services/Usuario/usuarioAuthService";
 import { useNavigate } from "react-router-dom";
 
 const UsuarioAuth = () => {
+  const { LoginUsuario, isAuthenticated, logout, user } = useContext(AuthContext);
+
   const [isLogin, setIsLogin] = useState(true);
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
@@ -16,6 +15,12 @@ const UsuarioAuth = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/");
+    }
+  }, [isAuthenticated, navigate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -23,17 +28,22 @@ const UsuarioAuth = () => {
 
     try {
       if (isLogin) {
-        // 🔹 Garante que treinador não fique logado
-        logoutTrainer();
+        // garante que nenhum treinador fique logado
+        logout();
 
-        const data = await loginUsuario(email, password);
-        alert(`✅ Bem-vindo, ${data.usuario?.nome || "usuário"}!`);
+        await LoginUsuario(email, password);
+
+        alert("✅ Login realizado com sucesso!");
         navigate("/");
       } else {
         const usuarioData = { nome, telefone, email, password };
-        await registerUsuario(usuarioData);
-        alert("✅ Registro realizado com sucesso!");
+        const response = await registerUsuario(usuarioData);
+        alert("✅ Cadastro realizado com sucesso!");
         setIsLogin(true);
+        await LoginUsuario(email, password);
+        setNome("");
+        setEmail("");
+        setPassword("");
       }
 
       setNome("");
@@ -41,12 +51,13 @@ const UsuarioAuth = () => {
       setEmail("");
       setPassword("");
     } catch (err) {
-      console.error("❌ Erro:", err);
+      console.error(err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">

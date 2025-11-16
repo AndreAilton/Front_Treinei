@@ -4,11 +4,13 @@ import { BrowserRouter } from "react-router-dom";
 import "./global/index.css";
 import MainRoutes from "./routes";
 import { AuthProvider } from "./context/AuthContext";
+import NavBar from "./components/Navbar";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <AuthProvider>
       <BrowserRouter>
+        <NavBar />
         <MainRoutes />
       </BrowserRouter>
     </AuthProvider>
