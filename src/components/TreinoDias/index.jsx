@@ -1,3 +1,4 @@
+// src/pages/TreinoDias/TreinoDias.jsx
 import { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { getExercicios } from "../../services/Treinador/ExerciciosService";
@@ -6,6 +7,7 @@ import {
   createTreinoDia,
   getTreinoDias,
   deleteTreinoDia,
+  updateTreinoDia,
 } from "../../services/Treinador/TreinoDiasService";
 
 export default function TreinoDias() {
@@ -25,6 +27,14 @@ export default function TreinoDias() {
   // 🔹 Estado do modal
   const [selectedExercicio, setSelectedExercicio] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // dados editáveis no modal
+  const [editData, setEditData] = useState({
+    Series: 4,
+    Repeticoes: 12,
+    Descanso: 60,
+    Observacoes: "",
+  });
 
   const abrirModal = (exercicio) => {
     setSelectedExercicio(exercicio);
@@ -52,6 +62,28 @@ export default function TreinoDias() {
     "Domingo",
   ];
 
+  // quando selectedExercicio muda, popula editData com valores ou defaults
+  useEffect(() => {
+    if (selectedExercicio) {
+      setEditData({
+        Series:
+          selectedExercicio.Series !== undefined ? selectedExercicio.Series : 4,
+        Repeticoes:
+          selectedExercicio.Repeticoes !== undefined
+            ? selectedExercicio.Repeticoes
+            : 12,
+        Descanso:
+          selectedExercicio.Descanso !== undefined
+            ? selectedExercicio.Descanso
+            : 60,
+        Observacoes:
+          selectedExercicio.Observacoes !== undefined
+            ? selectedExercicio.Observacoes
+            : "",
+      });
+    }
+  }, [selectedExercicio]);
+
   // 🔹 Carrega Exercícios e Treinos
   useEffect(() => {
     const loadData = async () => {
@@ -72,6 +104,7 @@ export default function TreinoDias() {
       }
     };
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 🔹 Buscar TreinoDias do backend
@@ -85,7 +118,7 @@ export default function TreinoDias() {
         diasSemana.forEach((dia) => (diasMap[dia] = []));
 
         const filtrados = data.filter(
-          (item) => item.id_Treino === Number(treinoSelecionado)
+          (item) => item.id_treino === Number(treinoSelecionado)
         );
 
         filtrados.forEach((item) => {
@@ -135,6 +168,65 @@ export default function TreinoDias() {
     setFilteredExercicios(filtered);
   }, [filters, exercicios, treinoDias]);
 
+  // 🔹 Função para salvar alterações (local + backend quando aplicável)
+  const salvarAlteracoes = async () => {
+    if (!selectedExercicio) return;
+
+    const payload = {
+      Series: Number(editData.Series),
+      Repeticoes: Number(editData.Repeticoes),
+      Descanso: Number(editData.Descanso),
+      Observacoes: editData.Observacoes || "",
+    };
+
+    try {
+      // Se existir idTreinoDia -> atualiza no backend
+      if (selectedExercicio.idTreinoDia) {
+        await updateTreinoDia(selectedExercicio.idTreinoDia, payload);
+
+        // atualiza estado treinoDias local
+        const novoTreinoDias = { ...treinoDias };
+        Object.keys(novoTreinoDias).forEach((dia) => {
+          novoTreinoDias[dia] = novoTreinoDias[dia].map((ex) => {
+            if (ex.idTreinoDia === selectedExercicio.idTreinoDia) {
+              return {
+                ...ex,
+                ...payload,
+              };
+            }
+            return ex;
+          });
+        });
+        setTreinoDias(novoTreinoDias);
+      } else {
+        // Não tem idTreinoDia -> apenas atualiza local (pode ser um exercício na lista ou já dentro de um dia sem idTreinoDia)
+        // Atualiza filteredExercicios se o selectedExercicio estiver lá
+        const updatedFiltered = filteredExercicios.map((ex) =>
+          ex.id === selectedExercicio.id ? { ...ex, ...payload } : ex
+        );
+        setFilteredExercicios(updatedFiltered);
+
+        // Também atualiza treinoDias caso haja alguma entrada sem idTreinoDia (precaução)
+        const novoTreinoDias = { ...treinoDias };
+        Object.keys(novoTreinoDias).forEach((dia) => {
+          novoTreinoDias[dia] = novoTreinoDias[dia].map((ex) => {
+            if (ex.id === selectedExercicio.id && !ex.idTreinoDia) {
+              return { ...ex, ...payload };
+            }
+            return ex;
+          });
+        });
+        setTreinoDias(novoTreinoDias);
+      }
+
+      fecharModal();
+    } catch (err) {
+      console.error("❌ Erro ao atualizar treino-dia:", err);
+      alert("Erro ao atualizar exercício. Veja o console para mais detalhes.");
+    }
+  };
+
+  // 🔹 Drag & Drop
   // 🔹 Drag & Drop
   const onDragEnd = async (result) => {
     const { source, destination } = result;
@@ -143,9 +235,8 @@ export default function TreinoDias() {
       return alert("⚠️ Selecione um treino antes de montar a semana!");
 
     const newTreino = { ...treinoDias };
-    const jaExisteNoDia = (dia, exId) =>
-      newTreino[dia].some((ex) => ex.id === exId);
 
+    // ⛔ Remover arrastando para a lista de exercícios
     if (
       source.droppableId !== "exercicios" &&
       destination.droppableId === "exercicios"
@@ -168,9 +259,14 @@ export default function TreinoDias() {
       return;
     }
 
+    // ⭐ ADICIONAR EXERCÍCIO À SEMANA
     if (source.droppableId === "exercicios") {
       const exercicioMovido = filteredExercicios[source.index];
-      if (jaExisteNoDia(destination.droppableId, exercicioMovido.id)) return;
+
+      const jaExiste = newTreino[destination.droppableId].some(
+        (ex) => ex.id === exercicioMovido.id
+      );
+      if (jaExiste) return;
 
       newTreino[destination.droppableId].splice(
         destination.index,
@@ -181,7 +277,7 @@ export default function TreinoDias() {
 
       try {
         const novoRegistro = await createTreinoDia({
-          id_Treino: Number(treinoSelecionado),
+          id_treino: Number(treinoSelecionado),
           Dia_da_Semana: destination.droppableId,
           id_Exercicio: exercicioMovido.id,
           Series: exercicioMovido.Series || 4,
@@ -190,35 +286,43 @@ export default function TreinoDias() {
           Observacoes:
             exercicioMovido.Observacoes || "Executar com carga moderada",
         });
+
         exercicioMovido.idTreinoDia = novoRegistro.id;
       } catch (err) {
         console.error("❌ Erro ao criar treino-dia:", err);
       }
-    } else if (source.droppableId !== destination.droppableId) {
-      const [moved] = newTreino[source.droppableId].splice(source.index, 1);
-      if (jaExisteNoDia(destination.droppableId, moved.id)) return;
+    }
 
+    // ⭐⭐ MOVER ENTRE DIAS (ATUALIZA O REGISTRO EXISTENTE — sem apagar!)
+    else if (source.droppableId !== destination.droppableId) {
+      const [moved] = newTreino[source.droppableId].splice(source.index, 1);
+
+      const jaExiste = newTreino[destination.droppableId].some(
+        (ex) => ex.id === moved.id
+      );
+      if (jaExiste) return;
+
+      // move localmente
       newTreino[destination.droppableId].splice(destination.index, 0, moved);
       setTreinoDias(newTreino);
 
       try {
-        if (moved.idTreinoDia) await deleteTreinoDia(moved.idTreinoDia);
-        const novoRegistro = await createTreinoDia({
-          id_Treino: Number(treinoSelecionado),
-          Dia_da_Semana: destination.droppableId,
-          id_Exercicio: moved.id,
-          Series: moved.Series || 4,
-          Repeticoes: moved.Repeticoes || 12,
-          Descanso: moved.Descanso || 60,
-          Observacoes: moved.Observacoes || "Executar com carga moderada",
-        });
-        moved.idTreinoDia = novoRegistro.id;
+        if (moved.idTreinoDia) {
+          // ⭐⭐⭐ AQUI ESTÁ A CORREÇÃO:
+          await updateTreinoDia(moved.idTreinoDia, {
+            Dia_da_Semana: destination.droppableId,
+          });
+        }
       } catch (err) {
-        console.error("❌ Erro ao mover treino-dia:", err);
+        console.error("❌ Erro ao atualizar treino-dia:", err);
       }
-    } else {
+    }
+
+    // ⭐ reorder dentro do mesmo dia
+    else {
       const diaAtual = Array.from(newTreino[source.droppableId]);
       const [reordered] = diaAtual.splice(source.index, 1);
+
       diaAtual.splice(destination.index, 0, reordered);
       newTreino[source.droppableId] = diaAtual;
       setTreinoDias(newTreino);
@@ -365,17 +469,22 @@ export default function TreinoDias() {
       </div>
 
       {/* 🔹 MODAL DE EXERCÍCIO */}
-      {console.log(selectedExercicio)}
       {isModalOpen && selectedExercicio && (
         <div
           id="modalBackground"
           onClick={handleBackgroundClick}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4"
         >
           <div
-            className="bg-white rounded-2xl p-6 w-11/12 max-w-lg shadow-xl relative animate-fadeIn"
+            className="
+      bg-white rounded-2xl shadow-xl relative animate-fadeIn 
+      w-full max-w-lg 
+      max-h-[90vh] overflow-y-auto
+      p-6
+    "
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Botão fechar */}
             <button
               onClick={fecharModal}
               className="absolute top-3 right-4 text-gray-500 hover:text-gray-700 text-2xl"
@@ -383,10 +492,11 @@ export default function TreinoDias() {
               ✕
             </button>
 
-            <h2 className="text-2xl font-bold text-blue-700 mb-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-blue-700 mb-4 break-words">
               {selectedExercicio.nome}
             </h2>
 
+            {/* 🔥 Vídeo responsivo */}
             {selectedExercicio.videos && selectedExercicio.videos.length > 0 ? (
               <video
                 src={`http://${selectedExercicio.videos[0].url.replace(
@@ -394,7 +504,7 @@ export default function TreinoDias() {
                   ""
                 )}`}
                 controls
-                className="w-full rounded-lg mb-4"
+                className="w-full rounded-lg mb-4 max-h-[250px] object-contain"
               />
             ) : (
               <p className="text-gray-400 italic mb-4">
@@ -402,6 +512,7 @@ export default function TreinoDias() {
               </p>
             )}
 
+            {/* Infos */}
             <p>
               <strong>Categoria:</strong> {selectedExercicio.Categoria}
             </p>
@@ -411,10 +522,92 @@ export default function TreinoDias() {
             </p>
 
             {selectedExercicio.Observacoes && (
-              <p className="mt-3 text-gray-600">
+              <p className="mt-3 text-gray-600 break-words">
                 <strong>Observações:</strong> {selectedExercicio.Observacoes}
               </p>
             )}
+
+            {/* 🔥 Inputs agora responsivos em coluna no mobile */}
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="font-semibold text-gray-700">Séries</label>
+                <input
+                  type="number"
+                  min={1}
+                  className="w-full border rounded-xl px-3 py-2"
+                  value={editData.Series}
+                  onChange={(e) =>
+                    setEditData({ ...editData, Series: Number(e.target.value) })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold text-gray-700">
+                  Repetições
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  className="w-full border rounded-xl px-3 py-2"
+                  value={editData.Repeticoes}
+                  onChange={(e) =>
+                    setEditData({
+                      ...editData,
+                      Repeticoes: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="font-semibold text-gray-700">
+                  Descanso (s)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  className="w-full border rounded-xl px-3 py-2"
+                  value={editData.Descanso}
+                  onChange={(e) =>
+                    setEditData({
+                      ...editData,
+                      Descanso: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="font-semibold text-gray-700">
+                  Observações
+                </label>
+                <textarea
+                  className="w-full border rounded-xl px-3 py-2 min-h-[80px]"
+                  value={editData.Observacoes}
+                  onChange={(e) =>
+                    setEditData({ ...editData, Observacoes: e.target.value })
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Botões */}
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={salvarAlteracoes}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl"
+              >
+                Salvar Alterações
+              </button>
+
+              <button
+                onClick={fecharModal}
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-xl"
+              >
+                Cancelar
+              </button>
+            </div>
           </div>
         </div>
       )}

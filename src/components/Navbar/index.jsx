@@ -96,17 +96,23 @@ const NavBar = () => {
 
           {role === "trainer" && (
             <>
+              <Link to="/exercicios" className="hover:text-blue-500 transition">
+                Meus Exercícios
+              </Link>
               <Link to="/treinos" className="hover:text-blue-500 transition">
                 Gerenciar Treinos
-              </Link>
-              <Link to="/exercicios" className="hover:text-blue-500 transition">
-                Exercícios
               </Link>
               <Link
                 to="/vincular-treino-usuario"
                 className="hover:text-blue-500 transition"
               >
-                Vincular Usuários
+                Meus Alunos
+              </Link>
+              <Link
+                to="/treino-dias"
+                className="hover:text-blue-500 transition"
+              >
+                Treino Semanal
               </Link>
               <button
                 onClick={handleLogout}
