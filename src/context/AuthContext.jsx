@@ -2,7 +2,10 @@
 import { createContext, useState, useEffect } from "react";
 import { loginTrainer } from "../services/Treinador/authService";
 import { getdadosTreinador } from "../services/Treinador/treinadorService";
-import { loginUsuario, getdadosUsuario } from "../services/Usuario/usuarioAuthService";
+import {
+  loginUsuario,
+  getdadosUsuario,
+} from "../services/Usuario/usuarioAuthService";
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -86,6 +89,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("usuario");
     setTipo(null);
     notifyAuthChanged();
+
   };
 
   return (

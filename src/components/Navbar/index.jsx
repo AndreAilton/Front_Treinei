@@ -51,6 +51,7 @@ const NavBar = () => {
   }, []);
 
   const handleLogout = () => {
+    navigate("/");
     if (auth && auth.logout) auth.logout();
     else {
       // fallback
@@ -59,7 +60,6 @@ const NavBar = () => {
       localStorage.removeItem("trainer");
       localStorage.removeItem("usuario");
       setRole(null);
-      navigate("/");
     }
   };
 

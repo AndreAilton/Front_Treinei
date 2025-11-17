@@ -492,7 +492,7 @@ export default function TreinoDias() {
               ✕
             </button>
 
-            <h2 className="text-xl sm:text-2xl font-bold text-blue-700 mb-4 break-words">
+            <h2 className="text-xl sm:text-2xl font-bold text-blue-700 mb-4 ">
               {selectedExercicio.nome}
             </h2>
 
