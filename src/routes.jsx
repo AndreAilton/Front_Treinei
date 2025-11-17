@@ -4,10 +4,10 @@ import Auth from "./components/TrainerLogin";
 import DashBoard from "./components/ExercicioDashboard";
 import TreinosDashboard from "./components/TreinosDashboard";
 import TreinoDias from "./components/TreinoDias";
-import VincularTreinoUsuario from "./components/VincularTreinoUsuario";
+import VincularTreinoUsuario from "./components/MeusAlunos";
 import AuthUsuario from "./components/UsuarioAuth";
 import EscolherTreinador from "./components/EscolherTreinador";
-
+import DietaDashboard from "./components/DietaDashboard";
 export default function MainRoutes() {
   return (
     <Routes>
@@ -19,6 +19,7 @@ export default function MainRoutes() {
       <Route path="/vincular-treino-usuario" element={<VincularTreinoUsuario />} />
       <Route path="/auth-usuario" element={<AuthUsuario />} />
       <Route path="/escolher-treinador" element={<EscolherTreinador />} />
+      <Route path="/dietas" element={<DietaDashboard />} />
     </Routes>
   );
 }

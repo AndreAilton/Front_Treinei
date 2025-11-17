@@ -27,6 +27,42 @@ export const getTreinoUsuarios = async () => {
 };
 
 
+export const getTreinoUsuariosuser = async () => {
+  try {
+    const response = await axios.get(API_URL, {
+      headers: getAuthUser(),
+    });
+
+    return response.data.usuariosTreinos || [];
+  } catch (error) {
+    console.error("Erro ao buscar vínculos usuário-treino:", error.response?.data || error);
+    return [];
+  }
+};
+
+
+export const deleteTreinoUsuariobyUser = async (idVinculo) => {
+  try {
+    await axios.delete(`${API_URL}/${idVinculo}`, {
+      headers: getAuthUser(),
+    });
+  } catch (error) {
+    console.error("Erro ao deletar vínculo por usuário:", error.response?.data || error);
+    throw error;
+  }
+};
+
+export const deleteTreinoTreinadorbyTreinador = async (idUser) => {
+  try {
+    await axios.delete(`${API_URL}/${idUser}`, {
+      headers: getAuthHeader(),
+    });
+  } catch (error) {
+    console.error("Erro ao deletar vínculo por treinador:", error.response?.data || error);
+    throw error;
+  }
+};
+
 export const escolherTreinador = async (idTreinador) => {
   try {
     const response = await axios.post(

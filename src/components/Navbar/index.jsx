@@ -114,6 +114,9 @@ const NavBar = () => {
               >
                 Treino Semanal
               </Link>
+              <Link to="/dietas" className="hover:text-blue-500 transition">
+                Dietas
+              </Link>
               <button
                 onClick={handleLogout}
                 className="text-sm px-3 py-1 rounded hover:bg-red-50 hover:text-red-600 transition"
