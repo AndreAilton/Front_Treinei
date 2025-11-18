@@ -12,6 +12,7 @@ const getAuthHeader = () => {
   return { Authorization: `Bearer ${token}` };
 };
 
+
 // 🔹 Login de usuário
 export const loginUsuario = async (email, password) => {
   try {
@@ -55,7 +56,7 @@ export const getdadosUsuario = async () => {
     const response = await axios.get(`${API_URL}/usuarios`, {
       headers: getAuthHeader(),
     });
-    return response.data.user || [];
+    return response;
   } catch (error) {
     console.error("Erro ao carregar Usuario", error.response?.data || error);
     return [];
