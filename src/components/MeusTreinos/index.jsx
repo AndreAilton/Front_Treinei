@@ -66,7 +66,7 @@ export default function MeusTreinos() {
         alignItems: "center",
       }}
     >
-      <h1 style={{ marginBottom: 10, textAlign: "center" }}>Meus Exercícios</h1>
+      <h1 className="text-3xl font-bold text-blue-700 p-10">Meus Exercícios</h1>
 
       {linkDieta && (
         <a
