@@ -522,7 +522,7 @@ export default function TreinoDias() {
             </p>
 
             {selectedExercicio.Observacoes && (
-              <p className="mt-3 text-gray-600 break-words">
+              <p className="mt-3 text-gray-600 ">
                 <strong>Observações:</strong> {selectedExercicio.Observacoes}
               </p>
             )}
@@ -583,7 +583,7 @@ export default function TreinoDias() {
                   Observações
                 </label>
                 <textarea
-                  className="w-full border rounded-xl px-3 py-2 min-h-[80px]"
+                  className="w-full border rounded-xl px-3 py-2 "
                   value={editData.Observacoes}
                   onChange={(e) =>
                     setEditData({ ...editData, Observacoes: e.target.value })
