@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 const HomePage = () => {
   const navigate = useNavigate();
   const [showLoginOptions, setShowLoginOptions] = useState(false);
-
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
       

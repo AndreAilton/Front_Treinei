@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:3000";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -18,7 +18,10 @@ export const registerTrainer = async (nome, email, password) => {
 
     return data;
   } catch (error) {
-    console.error("❌ Erro no registro do treinador:", error.response?.data || error);
+    console.error(
+      "❌ Erro no registro do treinador:",
+      error.response?.data || error
+    );
 
     // Tratamento de erro consistente
     const message =
@@ -47,7 +50,10 @@ export const loginTrainer = async (email, password) => {
 
     return data;
   } catch (error) {
-    console.error("❌ Erro no login do treinador:", error.response?.data || error);
+    console.error(
+      "❌ Erro no login do treinador:",
+      error.response?.data || error
+    );
 
     const message =
       error.response?.data?.errors?.join(" ") ||

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:3000/treinos-dias";
+const API_URL = `${import.meta.env.VITE_API_URL}/treinos-dias`;
 
 // 🔹 Recupera o token salvo no login
 const getAuthHeader = () => {

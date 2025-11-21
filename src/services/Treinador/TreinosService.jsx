@@ -1,7 +1,7 @@
 // src/services/TreinosService.jsx
 import axios from "axios";
 
-const API_URL = "http://localhost:3000/treinos";
+const API_URL = `${import.meta.env.VITE_API_URL}/treinos`;
 
 // 🔹 Recupera o token salvo no login
 const getAuthHeader = () => {
@@ -56,6 +56,18 @@ export const updateTreino = async (id, data) => {
     return response.data;
   } catch (error) {
     console.error("Erro ao atualizar treino:", error.response?.data || error);
+    throw error;
+  }
+};
+
+export const duplicarTreino = async (id) => {
+  try {
+    const response = await axios.post(`${API_URL}/duplicar/${id}`, null, {
+      headers: getAuthHeader(),
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao criar treino:", error.response?.data || error);
     throw error;
   }
 };

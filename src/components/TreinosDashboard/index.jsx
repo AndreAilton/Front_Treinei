@@ -4,6 +4,7 @@ import {
   createTreino,
   deleteTreino,
   updateTreino,
+  duplicarTreino, // ✅ IMPORTADO
 } from "../../services/Treinador/TreinosService";
 
 export default function TreinoDashboard() {
@@ -81,6 +82,19 @@ export default function TreinoDashboard() {
     }
   };
 
+  // ✅ NOVA FUNÇÃO PARA DUPLICAR TREINO
+  const handleDuplicate = async (id) => {
+    if (!window.confirm("Deseja duplicar este treino?")) return;
+
+    try {
+      await duplicarTreino(id);
+      await loadTreinos();
+    } catch (error) {
+      console.error("Erro ao duplicar treino:", error);
+      alert("Erro ao duplicar treino.");
+    }
+  };
+
   return (
     <div className="min-h-screen from-blue-50 to-gray-100 p-8">
       <div className="max-w-6xl mx-auto bg-white shadow-xl rounded-2xl p-8 border border-gray-200">
@@ -118,9 +132,7 @@ export default function TreinoDashboard() {
         {loading ? (
           <p className="text-gray-500 text-center">Carregando treinos...</p>
         ) : filteredTreinos.length === 0 ? (
-          <p className="text-gray-500 text-center">
-            Nenhum treino cadastrado ainda.
-          </p>
+          <p className="text-gray-500 text-center">Nenhum treino cadastrado ainda.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border border-gray-200 rounded-xl">
@@ -140,7 +152,19 @@ export default function TreinoDashboard() {
                   >
                     <td className="py-3 px-4">{t.id}</td>
                     <td className="py-3 px-4">{t.nome}</td>
-                    <td className="py-3 px-4 text-center">
+
+                    {/* 🔥 AÇÕES (CLONAR + EXCLUIR) */}
+                    <td className="py-3 px-4 text-center flex justify-center gap-4">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDuplicate(t.id);
+                        }}
+                        className="text-blue-600 hover:underline"
+                      >
+                        Clonar
+                      </button>
+
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -151,6 +175,7 @@ export default function TreinoDashboard() {
                         Excluir
                       </button>
                     </td>
+
                   </tr>
                 ))}
               </tbody>
