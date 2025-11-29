@@ -106,18 +106,27 @@ export default function ExercicioDashboard() {
     }
   };
 
+  /* 🔥 handleUpdate atualizado com suporte a troca de vídeo */
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      await updateExercicio(editModal.id, editModal);
+      const fd = new FormData();
+      fd.append("nome", editModal.nome);
+      fd.append("Categoria", editModal.Categoria);
+      fd.append("Grupo_Muscular", editModal.Grupo_Muscular);
+      fd.append("Descricao", editModal.Descricao);
+
+      if (editModal.newFile) {
+        fd.append("file", editModal.newFile);
+      }
+
+      await updateExercicio(editModal.id, fd);
       setEditModal(null);
       await loadExercicios();
     } catch (err) {
       console.error("Erro ao atualizar exercício:", err);
     }
   };
-
-  // Lista de categorias para separação
 
   const categorias = Array.from(
     new Set(exercicios.map((ex) => ex.Categoria).filter(Boolean))
@@ -148,7 +157,6 @@ export default function ExercicioDashboard() {
           </div>
         </div>
 
-        {/* 🔹 Filtros */}
         <div className="flex flex-wrap gap-3 mb-6">
           <input
             type="text"
@@ -193,7 +201,6 @@ export default function ExercicioDashboard() {
           )}
         </div>
 
-        {/* 🔹 Exercícios separados por categoria */}
         {loading ? (
           <p className="text-gray-500 text-center">Carregando exercícios...</p>
         ) : filteredExercicios.length === 0 ? (
@@ -209,10 +216,11 @@ export default function ExercicioDashboard() {
               if (exerciciosCategoria.length === 0) return null;
 
               return (
-                <div key={categoria} className="">
+                <div key={categoria}>
                   <h2 className="text-xl font-bold text-blue-700 mb-4">
                     {categoria}
                   </h2>
+
                   <div className="flex flex-wrap gap-4 overflow-x-auto pb-2">
                     {exerciciosCategoria.map((ex) => (
                       <div
@@ -229,6 +237,7 @@ export default function ExercicioDashboard() {
                         <p className="text-gray-500 text-sm mb-1">
                           Aparelho: {ex.Aparelho}
                         </p>
+
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -248,7 +257,7 @@ export default function ExercicioDashboard() {
         )}
       </div>
 
-      {/* 🔹 Modal de Criação */}
+      {/* Modal Criar */}
       {showModal && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
@@ -275,6 +284,7 @@ export default function ExercicioDashboard() {
                 required
                 className="w-full border border-gray-700 rounded-xl px-4 py-2 bg-gray-800 text-white"
               />
+
               <input
                 type="text"
                 placeholder="Categoria"
@@ -285,6 +295,7 @@ export default function ExercicioDashboard() {
                 required
                 className="w-full border border-gray-700 rounded-xl px-4 py-2 bg-gray-800 text-white"
               />
+
               <input
                 type="text"
                 placeholder="Grupo Muscular"
@@ -295,6 +306,7 @@ export default function ExercicioDashboard() {
                 required
                 className="w-full border border-gray-700 rounded-xl px-4 py-2 bg-gray-800 text-white"
               />
+
               <input
                 type="text"
                 placeholder="Aparelho"
@@ -302,6 +314,7 @@ export default function ExercicioDashboard() {
                 onChange={(e) => setForm({ ...form, Aparelho: e.target.value })}
                 className="w-full border border-gray-700 rounded-xl px-4 py-2 bg-gray-800 text-white"
               />
+
               <textarea
                 placeholder="Descrição"
                 value={form.Descricao}
@@ -310,10 +323,13 @@ export default function ExercicioDashboard() {
                 }
                 className="w-full border border-gray-700 rounded-xl px-4 py-2 bg-gray-800 text-white resize-none"
               />
+
               <input
                 type="file"
                 accept="video/*"
-                onChange={(e) => setForm({ ...form, file: e.target.files[0] })}
+                onChange={(e) =>
+                  setForm({ ...form, file: e.target.files[0] })
+                }
                 className="w-full border border-gray-700 rounded-xl px-4 py-2 bg-gray-800 text-white"
               />
 
@@ -329,75 +345,152 @@ export default function ExercicioDashboard() {
         </div>
       )}
 
-      {/* 🔹 Modal de Edição e Vídeo */}
-      {editModal && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50"
-          onClick={(e) => e.target === e.currentTarget && setEditModal(null)}
+      {/* Modal Editar */}
+     {editModal && (
+  <div
+    className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+    onClick={(e) => e.target === e.currentTarget && setEditModal(null)}
+  >
+    <div
+      className="relative bg-gray-900 text-white rounded-2xl shadow-2xl border border-gray-700 w-full max-w-2xl"
+      style={{
+        maxHeight: "90vh",
+        overflow: "hidden",
+      }}
+    >
+      {/* CONTEÚDO COM ROLAGEM INTERNA */}
+      <div
+        className="p-6 sm:p-8"
+        style={{
+          overflowY: "auto",
+          maxHeight: "90vh",
+        }}
+      >
+        {/* BOTÃO FECHAR */}
+        <button
+          onClick={() => setEditModal(null)}
+          className="absolute top-3 right-4 text-gray-400 hover:text-red-400 text-xl"
         >
-          <div className="relative bg-gray-900 text-white rounded-2xl shadow-lg p-8 w-full max-w-3xl border border-gray-700 overflow-y-auto max-h-[90vh]">
-            <button
-              onClick={() => setEditModal(null)}
-              className="absolute top-3 right-4 text-gray-400 hover:text-red-400 text-xl"
-            >
-              ✖
-            </button>
+          ✖
+        </button>
 
-            <h2 className="text-2xl font-bold text-blue-400 mb-4 text-center">
-              Editar Exercício
-            </h2>
+        <h2 className="text-2xl sm:text-3xl font-bold text-blue-400 mb-6 text-center">
+          Editar Exercício
+        </h2>
 
-            {editModal.videos?.[0]?.url && (
+        {/* VÍDEO COM PREVIEW DO NOVO ARQUIVO */}
+        <div className="w-full flex justify-center mb-5">
+
+          {editModal.newFile ? (
+            // 🔥 MOSTRA O NOVO VÍDEO SELECIONADO
+            <div className="max-w-full overflow-hidden rounded-xl border border-gray-700">
               <video
                 controls
-                className="w-full rounded-xl mb-4 border border-gray-700"
+                className="aspect-video"
+                src={URL.createObjectURL(editModal.newFile)}
+              />
+            </div>
+
+          ) : editModal.videos?.[0]?.url ? (
+            // 🔵 MOSTRA O VÍDEO ORIGINAL
+            <div className="max-w-full overflow-hidden rounded-xl border border-gray-700">
+              <video
+                controls
+                className="aspect-video"
                 src={`http://${editModal.videos[0].url}`}
               />
-            )}
+            </div>
 
-            <form onSubmit={handleUpdate} className="space-y-4">
-              <input
-                type="text"
-                value={editModal.nome}
-                onChange={(e) =>
-                  setEditModal({ ...editModal, nome: e.target.value })
-                }
-                className="w-full border border-gray-700 rounded-xl px-4 py-2 bg-gray-800 text-white"
-              />
-              <input
-                type="text"
-                value={editModal.Categoria}
-                onChange={(e) =>
-                  setEditModal({ ...editModal, Categoria: e.target.value })
-                }
-                className="w-full border border-gray-700 rounded-xl px-4 py-2 bg-gray-800 text-white"
-              />
-              <input
-                type="text"
-                value={editModal.Grupo_Muscular}
-                onChange={(e) =>
-                  setEditModal({ ...editModal, Grupo_Muscular: e.target.value })
-                }
-                className="w-full border border-gray-700 rounded-xl px-4 py-2 bg-gray-800 text-white"
-              />
-              <textarea
-                value={editModal.Descricao}
-                onChange={(e) =>
-                  setEditModal({ ...editModal, Descricao: e.target.value })
-                }
-                className="w-full border border-gray-700 rounded-xl px-4 py-2 bg-gray-800 text-white resize-none"
-              />
+          ) : (
+            // ⚪ CAIXA QUANDO NÃO TEM VÍDEO
+            <div className="rounded-xl border border-gray-700 bg-gray-800 flex items-center justify-center w-full max-w-[500px] aspect-video">
+              <span className="text-gray-400">Nenhum vídeo vinculado</span>
+            </div>
+          )}
 
-              <button
-                type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-xl transition-all"
-              >
-                Salvar Alterações
-              </button>
-            </form>
-          </div>
         </div>
-      )}
+
+        {/* CAMPO DISCRETO PARA ALTERAR VÍDEO */}
+        <div className="flex flex-col items-center mb-6">
+          <span className="text-gray-400 text-sm mb-2">
+            {editModal.videos?.length > 0
+              ? "Vídeo vinculado — deseja alterar?"
+              : "Nenhum vídeo vinculado — enviar?"}
+          </span>
+
+          <label className="cursor-pointer px-4 py-1 rounded-lg text-sm bg-gray-800 border border-gray-600 hover:bg-gray-700">
+            Selecionar vídeo
+            <input
+              type="file"
+              accept="video/*"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) {
+                  setEditModal({ ...editModal, newFile: file });
+                }
+              }}
+              className="hidden"
+            />
+          </label>
+        </div>
+
+        {/* FORMULÁRIO */}
+        <form onSubmit={handleUpdate} className="space-y-4">
+
+          <input
+            type="text"
+            value={editModal.nome}
+            onChange={(e) =>
+              setEditModal({ ...editModal, nome: e.target.value })
+            }
+            className="w-full border border-gray-700 rounded-xl px-4 py-2 bg-gray-800 text-white"
+            placeholder="Nome"
+          />
+
+          <input
+            type="text"
+            value={editModal.Categoria}
+            onChange={(e) =>
+              setEditModal({ ...editModal, Categoria: e.target.value })
+            }
+            className="w-full border border-gray-700 rounded-xl px-4 py-2 bg-gray-800 text-white"
+            placeholder="Categoria"
+          />
+
+          <input
+            type="text"
+            value={editModal.Grupo_Muscular}
+            onChange={(e) =>
+              setEditModal({ ...editModal, Grupo_Muscular: e.target.value })
+            }
+            className="w-full border border-gray-700 rounded-xl px-4 py-2 bg-gray-800 text-white"
+            placeholder="Grupo Muscular"
+          />
+
+          <textarea
+            rows={4}
+            value={editModal.Descricao}
+            onChange={(e) =>
+              setEditModal({ ...editModal, Descricao: e.target.value })
+            }
+            className="w-full border border-gray-700 rounded-xl px-4 py-2 bg-gray-800 text-white resize-none"
+            placeholder="Descrição"
+          />
+
+          <button
+            type="submit"
+            className="w-full bg-blue-600 hover:bg-blue-700 font-semibold py-2 rounded-xl transition-all"
+          >
+            Salvar Alterações
+          </button>
+
+        </form>
+      </div>
+    </div>
+  </div>
+)}
+
+
     </div>
   );
 }
