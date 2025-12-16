@@ -2,18 +2,49 @@ import React, { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import { registerTrainer } from "../../services/Treinador/authService";
 import { useNavigate } from "react-router-dom";
+import { 
+  User, 
+  Mail, 
+  Lock, 
+  Loader2, 
+  ArrowRight, 
+  Dumbbell, 
+  AlertCircle 
+} from "lucide-react";
 
+// --- 1. COMPONENTE INPUTFIELD MOVIDO PARA FORA (Correção do Bug) ---
+const InputField = ({ icon: Icon, type, placeholder, value, onChange }) => (
+  <div className="relative group">
+    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors">
+      <Icon size={20} />
+    </div>
+    <input
+      type={type}
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      required
+      className="w-full bg-gray-50 border border-gray-200 text-gray-800 rounded-xl py-3 pl-10 pr-4 outline-none focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all placeholder:text-gray-400"
+    />
+  </div>
+);
+
+// --- 2. COMPONENTE PRINCIPAL ---
 const TrainerAuth = () => {
-  const { login, isAuthenticated, user } = useContext(AuthContext);
+  const { login, isAuthenticated } = useContext(AuthContext);
   const [isLogin, setIsLogin] = useState(true);
+  
+  // Estados do formulário
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  
+  // Estados de feedback
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  
   const navigate = useNavigate();
 
-  // ✅ Redirecionar SOMENTE quando o isAuthenticated mudar
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/");
@@ -28,95 +59,143 @@ const TrainerAuth = () => {
     try {
       if (isLogin) {
         await login(email, password);
-        alert("✅ Login realizado com sucesso!");
+        // O redirecionamento é feito pelo useEffect
       } else {
         await registerTrainer(nome, email, password);
-        alert("✅ Registro realizado com sucesso!");
+        alert("✅ Conta criada com sucesso! Entrando...");
         setIsLogin(true);
-
+        // Limpa campos específicos
+        setNome(""); 
+        
         await login(email, password);
       }
     } catch (err) {
       console.error(err);
-      setError("❌ Erro: " + (err.message || "Falha na requisição."));
+      setError(err.message || "Falha na operação. Verifique seus dados.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">
-      <div className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center mb-6 text-blue-600">
-          {isLogin ? "Login do Treinador" : "Registrar Treinador"}
-        </h1>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-blue-900 p-4 font-sans">
+      {/* Container Principal */}
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden relative">
+        
+        {/* Detalhe Decorativo Superior */}
+        <div className="h-2 w-full bg-gradient-to-r from-blue-500 to-cyan-400"></div>
 
-        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+        <div className="p-8 md:p-10">
+          {/* Cabeçalho */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-50 rounded-full text-blue-600 mb-4 shadow-sm animate-in zoom-in duration-300">
+              <Dumbbell size={32} />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+              {isLogin ? "Bem-vindo de volta" : "Junte-se ao time"}
+            </h1>
+            <p className="text-gray-500 mt-2 text-sm">
+              {isLogin 
+                ? "Acesse seu painel de treinador" 
+                : "Crie sua conta e comece a gerenciar alunos"}
+            </p>
+          </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {!isLogin && (
-            <div>
-              <label className="block text-gray-700 mb-1">Nome</label>
-              <input
-                type="text"
-                placeholder="Seu nome"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                required
-                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+          {/* Mensagem de Erro */}
+          {error && (
+            <div className="mb-6 bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl flex items-start gap-3 text-sm animate-in fade-in slide-in-from-top-2">
+              <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
+              <p>{error}</p>
             </div>
           )}
 
-          <div>
-            <label className="block text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              placeholder="Seu email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+          {/* Formulário */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {!isLogin && (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+                <label className="block text-sm font-medium text-gray-700 mb-1 ml-1">Nome Completo</label>
+                <InputField 
+                  icon={User} 
+                  type="text" 
+                  placeholder="Ex: João Silva" 
+                  value={nome} 
+                  onChange={(e) => setNome(e.target.value)} 
+                />
+              </div>
+            )}
+
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 delay-75">
+              <label className="block text-sm font-medium text-gray-700 mb-1 ml-1">Email Profissional</label>
+              <InputField 
+                icon={Mail} 
+                type="email" 
+                placeholder="nome@email.com" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+              />
+            </div>
+
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 delay-100">
+               <div className="flex justify-between items-center mb-1 ml-1">
+                  <label className="block text-sm font-medium text-gray-700">Senha</label>
+                  {isLogin && (
+                    <a href="#" className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline">
+                      Esqueceu a senha?
+                    </a>
+                  )}
+               </div>
+              <InputField 
+                icon={Lock} 
+                type="password" 
+                placeholder="••••••••" 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 mt-6 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={20} className="animate-spin" />
+                  Processando...
+                </>
+              ) : (
+                <>
+                  {isLogin ? "Entrar na Plataforma" : "Criar Conta Grátis"}
+                  <ArrowRight size={20} />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Rodapé do Card */}
+          <div className="mt-8 pt-6 border-t border-gray-100 text-center">
+            <p className="text-gray-600 text-sm">
+              {isLogin ? "Não tem uma conta?" : "Já possui cadastro?"}{" "}
+              <button
+                onClick={() => {
+                  setError("");
+                  setIsLogin(!isLogin);
+                }}
+                className="text-blue-600 font-bold hover:text-blue-800 transition-colors inline-flex items-center gap-1 group"
+              >
+                {isLogin ? "Registre-se agora" : "Fazer Login"}
+              </button>
+            </p>
           </div>
+        </div>
 
-          <div>
-            <label className="block text-gray-700 mb-1">Senha</label>
-            <input
-              type="password"
-              placeholder="Sua senha"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+        {/* Copyright Discreto */}
+        <div className="bg-gray-50 py-3 text-center border-t border-gray-100">
+           <p className="text-xs text-gray-400">
+             Treinei Fitness © {new Date().getFullYear()} • Área do Treinador
+           </p>
+        </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white font-semibold py-2 rounded-xl hover:bg-blue-700 transition disabled:opacity-50"
-          >
-            {loading ? "Processando..." : isLogin ? "Entrar" : "Registrar"}
-          </button>
-        </form>
-
-        <p className="text-center text-gray-600 mt-6">
-          {isLogin ? "Ainda não tem conta?" : "Já tem conta?"}{" "}
-          <button
-            onClick={() => {
-              setError("");
-              setIsLogin(!isLogin);
-            }}
-            className="text-blue-600 hover:underline font-semibold"
-          >
-            {isLogin ? "Registre-se" : "Faça login"}
-          </button>
-        </p>
-
-        <p className="text-center text-gray-400 text-sm mt-6">
-          Treinei Fitness © {new Date().getFullYear()}
-        </p>
       </div>
     </div>
   );
