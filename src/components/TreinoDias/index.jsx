@@ -13,6 +13,8 @@ import {
   Plus,
   RefreshCw,
   Loader2,
+  Video,       // Novo import
+  PlayCircle   // Novo import
 } from "lucide-react";
 
 import { getExercicios } from "../../services/Treinador/ExerciciosService";
@@ -24,23 +26,23 @@ import {
   updateTreinoDia,
 } from "../../services/Treinador/TreinoDiasService";
 
-// --- Sub-Componente: InputGroup (para o Modal) ---
+// --- Sub-Componente: InputGroup (Visual Ajustado) ---
 const InputGroup = ({ label, Icon, value, onChange, type, min }) => (
   <div>
-    <label className="font-semibold text-gray-700 flex items-center gap-1 mb-1">
-      <Icon size={18} className="text-blue-500" /> {label}
+    <label className="font-semibold text-gray-700 flex items-center gap-1.5 mb-1.5 text-sm">
+      <Icon size={16} className="text-blue-500" /> {label}
     </label>
     <input
       type={type}
       min={min}
-      className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+      className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-gray-50 focus:bg-white"
       value={value}
       onChange={onChange}
     />
   </div>
 );
 
-// --- Sub-Componente: ExercicioModal ---
+// --- Sub-Componente: ExercicioModal (LAYOUT CORRIGIDO PARA VÍDEO VERTICAL) ---
 const ExercicioModal = ({
   selectedExercicio,
   isModalOpen,
@@ -52,130 +54,132 @@ const ExercicioModal = ({
 }) => {
   if (!isModalOpen || !selectedExercicio) return null;
 
+  // Tratamento da URL do vídeo
+  const videoUrl = selectedExercicio.videos?.[0]?.url
+    ? `http://${selectedExercicio.videos[0].url.replace(/^https?:\/\//, "")}`
+    : null;
+
   return (
     <div
       id="modalBackground"
       onClick={handleBackgroundClick}
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4 animate-in fade-in duration-200"
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl relative w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 transition-all"
+        className="bg-white rounded-2xl shadow-2xl relative w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row transition-all"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Botão fechar */}
         <button
           onClick={fecharModal}
-          className="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition p-2 rounded-full hover:bg-gray-100"
+          className="absolute top-4 right-4 z-50 text-gray-400 hover:text-red-500 transition p-2 rounded-full bg-white/80 hover:bg-white shadow-sm border border-transparent hover:border-gray-200"
         >
           <X size={24} />
         </button>
 
-        <h2 className="text-2xl font-bold text-blue-600 mb-2 flex items-center gap-2 border-b pb-2">
-          <Dumbbell size={24} /> {selectedExercicio.nome}
-        </h2>
-
-        {/* Informações do Exercício */}
-        <div className="text-sm text-gray-600 mb-4 flex gap-4">
-          <p className="flex items-center gap-1">
-            <Layers size={14} className="text-purple-500" />
-            {selectedExercicio.Categoria}
-          </p>
-          <p className="flex items-center gap-1">
-            <Target size={14} className="text-green-500" />
-            {selectedExercicio.Grupo_Muscular}
-          </p>
+        {/* --- LADO ESQUERDO: VÍDEO (Sem cortar 9:16) --- */}
+        <div className="w-full md:w-5/12 bg-gray-900 flex flex-col justify-center items-center relative min-h-[250px] md:min-h-auto">
+            {videoUrl ? (
+                <video
+                    src={videoUrl}
+                    controls
+                    // 'object-contain' garante que o vídeo inteiro apareça sem cortes, adicionando barras pretas se necessário
+                    className="w-full h-full object-contain bg-black max-h-[40vh] md:max-h-full"
+                />
+            ) : (
+                <div className="text-center p-8 text-gray-500 flex flex-col items-center">
+                    <PlayCircle size={48} className="mb-3 opacity-20" />
+                    <p className="text-sm">Vídeo não disponível</p>
+                </div>
+            )}
+            
+            {/* Título visível sobre o vídeo apenas no mobile */}
+            <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/80 to-transparent md:hidden">
+                <h2 className="text-white font-bold text-lg truncate">{selectedExercicio.nome}</h2>
+            </div>
         </div>
 
-        {/* Vídeo */}
-        {selectedExercicio.videos && selectedExercicio.videos.length > 0 ? (
-          <div className="w-full bg-gray-100 rounded-lg mb-4 overflow-hidden shadow-inner">
-            <video
-              src={`http://${selectedExercicio.videos[0].url.replace(
-                /^https?:\/\//,
-                ""
-              )}`}
-              controls
-              className="w-full max-h-[250px] object-cover"
-            />
-          </div>
-        ) : (
-          <p className="text-gray-400 italic mb-4 p-4 border rounded-lg bg-gray-50">
-            🎥 Nenhum vídeo de demonstração disponível.
-          </p>
-        )}
+        {/* --- LADO DIREITO: FORMULÁRIO E DADOS --- */}
+        <div className="w-full md:w-7/12 p-6 md:p-8 overflow-y-auto bg-white flex flex-col">
+            
+            {/* Header (Visível apenas Desktop) */}
+            <div className="hidden md:block mb-6 border-b border-gray-100 pb-4">
+                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                    {selectedExercicio.nome}
+                </h2>
+                <div className="flex gap-4 mt-2 text-sm text-gray-500">
+                    <span className="flex items-center gap-1 bg-purple-50 text-purple-700 px-2 py-0.5 rounded-md">
+                        <Layers size={14}/> {selectedExercicio.Categoria}
+                    </span>
+                    <span className="flex items-center gap-1 bg-green-50 text-green-700 px-2 py-0.5 rounded-md">
+                        <Target size={14}/> {selectedExercicio.Grupo_Muscular}
+                    </span>
+                </div>
+            </div>
 
-        {/* Formulário de Edição */}
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <InputGroup
-            label="Séries"
-            Icon={Repeat}
-            value={editData.Series}
-            onChange={(e) =>
-              setEditData({ ...editData, Series: Number(e.target.value) })
-            }
-            type="number"
-            min={1}
-          />
+            {/* Inputs em Grid */}
+            <div className="grid grid-cols-3 gap-4 mb-6">
+                <InputGroup
+                    label="Séries"
+                    Icon={Layers}
+                    value={editData.Series}
+                    onChange={(e) => setEditData({ ...editData, Series: Number(e.target.value) })}
+                    type="number"
+                    min={1}
+                />
+                <InputGroup
+                    label="Reps"
+                    Icon={Repeat}
+                    value={editData.Repeticoes}
+                    onChange={(e) => setEditData({ ...editData, Repeticoes: Number(e.target.value) })}
+                    type="number"
+                    min={1}
+                />
+                <InputGroup
+                    label="Descanso"
+                    Icon={Clock}
+                    value={editData.Descanso}
+                    onChange={(e) => setEditData({ ...editData, Descanso: Number(e.target.value) })}
+                    type="number"
+                    min={0}
+                />
+            </div>
 
-          <InputGroup
-            label="Repetições"
-            Icon={Repeat}
-            value={editData.Repeticoes}
-            onChange={(e) =>
-              setEditData({ ...editData, Repeticoes: Number(e.target.value) })
-            }
-            type="number"
-            min={1}
-          />
+            <div className="mb-6">
+                <label className="font-semibold text-gray-700 flex items-center gap-1.5 mb-1.5 text-sm">
+                    <FileText size={16} className="text-blue-500" /> Observações Técnicas
+                </label>
+                <textarea
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-800 bg-gray-50 focus:bg-white resize-none"
+                    rows={4}
+                    value={editData.Observacoes}
+                    onChange={(e) => setEditData({ ...editData, Observacoes: e.target.value })}
+                    placeholder="Ex: Controlar a descida, focar na contração..."
+                />
+            </div>
 
-          <InputGroup
-            label="Descanso (s)"
-            Icon={Clock}
-            value={editData.Descanso}
-            onChange={(e) =>
-              setEditData({ ...editData, Descanso: Number(e.target.value) })
-            }
-            type="number"
-            min={0}
-          />
-
-          <div className="sm:col-span-2">
-            <label className="font-semibold text-gray-700 flex items-center gap-1 mb-1">
-              <FileText size={18} className="text-blue-500" /> Observações
-            </label>
-            <textarea
-              className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:ring-blue-500 focus:border-blue-500 transition"
-              rows={3}
-              value={editData.Observacoes}
-              onChange={(e) =>
-                setEditData({ ...editData, Observacoes: e.target.value })
-              }
-            />
-          </div>
-        </div>
-
-        {/* Botões */}
-        <div className="mt-6 flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={salvarAlteracoes}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-semibold transition-all shadow-md active:scale-95"
-          >
-            Salvar Alterações
-          </button>
-
-          <button
-            onClick={fecharModal}
-            className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-3 rounded-xl font-semibold transition-all active:scale-95"
-          >
-            Cancelar
-          </button>
+            {/* Botões de Ação */}
+            <div className="mt-auto pt-4 flex flex-col sm:flex-row gap-3">
+                <button
+                    onClick={salvarAlteracoes}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition-all shadow-lg shadow-blue-200 active:scale-[0.98]"
+                >
+                    Salvar Configuração
+                </button>
+                <button
+                    onClick={fecharModal}
+                    className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all"
+                >
+                    Cancelar
+                </button>
+            </div>
         </div>
       </div>
     </div>
   );
 };
 
-// --- Sub-Componente: ExercicioCard ---
+// --- Sub-Componente: ExercicioCard (SEU DESIGN ORIGINAL MANTIDO) ---
 const ExercicioCard = ({ ex, index, onDoubleClick, isDayItem = false }) => {
   // O draggableId deve ser único. Para o dia, usamos o idTreinoDia (se existir).
   const draggableId = isDayItem ? (ex.idTreinoDia ? ex.idTreinoDia.toString() : `${ex.id}-temp`) : ex.id.toString();
@@ -234,7 +238,7 @@ const ExercicioCard = ({ ex, index, onDoubleClick, isDayItem = false }) => {
 };
 
 
-// --- Componente Principal: TreinoDias ---
+// --- Componente Principal: TreinoDias (SEU DESIGN ORIGINAL MANTIDO) ---
 export default function TreinoDias() {
   const [exercicios, setExercicios] = useState([]);
   const [filteredExercicios, setFilteredExercicios] = useState([]);
@@ -711,7 +715,7 @@ export default function TreinoDias() {
 
       </div>
 
-      {/* 🔹 MODAL DE EXERCÍCIO */}
+      {/* 🔹 MODAL DE EXERCÍCIO (AGORA ATUALIZADO) */}
       <ExercicioModal
         selectedExercicio={selectedExercicio}
         isModalOpen={isModalOpen}

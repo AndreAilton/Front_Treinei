@@ -17,20 +17,20 @@ import {
   createExercicio,
   deleteExercicio,
   updateExercicio,
-} from "../../services/Treinador/ExerciciosService"; // Assuma que o path está correto
+} from "../../services/Treinador/ExerciciosService"; 
 
 export default function ExercicioDashboard() {
   const [exercicios, setExercicios] = useState([]);
   const [filteredExercicios, setFilteredExercicios] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [editModal, setEditModal] = useState(null); // Objeto do exercício sendo editado
+  const [editModal, setEditModal] = useState(null); 
   const [form, setForm] = useState({
     nome: "",
     Categoria: "",
     Grupo_Muscular: "",
     Descricao: "",
     Aparelho: "",
-    file: null, // Novo arquivo para upload
+    file: null, 
   });
   const [filters, setFilters] = useState({
     search: "",
@@ -39,7 +39,7 @@ export default function ExercicioDashboard() {
   });
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [isFilterOpen, setIsFilterOpen] = useState(false); // Novo estado para menu mobile de filtros
+  const [isFilterOpen, setIsFilterOpen] = useState(false); 
 
   // --- LÓGICA DE DADOS ---
 
@@ -50,14 +50,12 @@ export default function ExercicioDashboard() {
   const loadExercicios = async () => {
     setLoading(true);
     try {
-      // Nota: Assegure-se de que a resposta do serviço contenha o campo 'id' e 'videos' (com url)
       const data = await getExercicios(); 
       const arr = Array.isArray(data) ? data : [];
       setExercicios(arr);
       setFilteredExercicios(arr);
     } catch (err) {
       console.error("Erro ao carregar exercícios:", err);
-      // Adicionado feedback visual para o usuário
       alert("Não foi possível carregar os exercícios."); 
     } finally {
       setLoading(false);
@@ -132,14 +130,14 @@ export default function ExercicioDashboard() {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    setSubmitting(true); // Reutilizando o submitting
+    setSubmitting(true); 
     try {
       const fd = new FormData();
       fd.append("nome", editModal.nome);
       fd.append("Categoria", editModal.Categoria);
       fd.append("Grupo_Muscular", editModal.Grupo_Muscular);
       fd.append("Descricao", editModal.Descricao);
-      fd.append("Aparelho", editModal.Aparelho || ""); // Adicionando Aparelho no update
+      fd.append("Aparelho", editModal.Aparelho || ""); 
       
       if (editModal.newFile) {
         fd.append("file", editModal.newFile);
@@ -159,7 +157,6 @@ export default function ExercicioDashboard() {
 
   // --- DADOS PARA FILTROS ---
 
-  // Obtém categorias e grupos musculares únicos
   const categorias = Array.from(
     new Set(exercicios.map((ex) => ex.Categoria).filter(Boolean))
   );
@@ -226,7 +223,7 @@ export default function ExercicioDashboard() {
            </h3>
            <button
              onClick={(e) => {
-               e.stopPropagation(); // Evita abrir o modal de edição ao clicar no menu
+               e.stopPropagation(); 
                setEditModal(ex);
              }}
              className="text-gray-400 hover:text-blue-500 transition p-1 rounded-full hover:bg-gray-100 shrink-0"
@@ -415,20 +412,24 @@ export default function ExercicioDashboard() {
         </Modal>
       )}
 
-      {/* --- MODAL EDITAR EXERCÍCIO --- */}
+      {/* --- MODAL EDITAR EXERCÍCIO (LAYOUT ALTERADO) --- */}
       {editModal && (
         <Modal 
           title={`Editando: ${editModal.nome}`}
           onClose={() => setEditModal(null)}
           onSubmit={handleUpdate}
           submitting={submitting}
-          size="max-w-2xl"
+          size="max-w-5xl" // Aumentado o tamanho máximo do modal
         >
-          <div className="space-y-6">
-            {/* Seção de Vídeo */}
-            <VideoPreview editModal={editModal} setEditModal={setEditModal} />
+          {/* Grid de Layout: 1 coluna no mobile, 2 colunas no desktop */}
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_1.5fr] gap-6 items-start">
             
-            {/* Formulário de Edição */}
+            {/* Coluna da Esquerda: Vídeo */}
+            <div className="md:sticky md:top-0">
+               <VideoPreview editModal={editModal} setEditModal={setEditModal} />
+            </div>
+
+            {/* Coluna da Direita: Formulário */}
             <div className="space-y-4">
               <input
                 type="text"
@@ -437,20 +438,22 @@ export default function ExercicioDashboard() {
                 onChange={(e) => setEditModal({ ...editModal, nome: e.target.value })}
                 className="w-full border border-gray-300 rounded-xl px-4 py-2 bg-white text-gray-900 focus:ring-blue-500 focus:border-blue-500 transition"
               />
-              <input
-                type="text"
-                placeholder="Categoria"
-                value={editModal.Categoria}
-                onChange={(e) => setEditModal({ ...editModal, Categoria: e.target.value })}
-                className="w-full border border-gray-300 rounded-xl px-4 py-2 bg-white text-gray-900 focus:ring-blue-500 focus:border-blue-500 transition"
-              />
-              <input
-                type="text"
-                placeholder="Grupo Muscular"
-                value={editModal.Grupo_Muscular}
-                onChange={(e) => setEditModal({ ...editModal, Grupo_Muscular: e.target.value })}
-                className="w-full border border-gray-300 rounded-xl px-4 py-2 bg-white text-gray-900 focus:ring-blue-500 focus:border-blue-500 transition"
-              />
+              <div className="grid grid-cols-2 gap-4">
+                  <input
+                    type="text"
+                    placeholder="Categoria"
+                    value={editModal.Categoria}
+                    onChange={(e) => setEditModal({ ...editModal, Categoria: e.target.value })}
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2 bg-white text-gray-900 focus:ring-blue-500 focus:border-blue-500 transition"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Grupo Muscular"
+                    value={editModal.Grupo_Muscular}
+                    onChange={(e) => setEditModal({ ...editModal, Grupo_Muscular: e.target.value })}
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2 bg-white text-gray-900 focus:ring-blue-500 focus:border-blue-500 transition"
+                  />
+              </div>
               <input
                 type="text"
                 placeholder="Aparelho/Equipamento"
@@ -459,21 +462,21 @@ export default function ExercicioDashboard() {
                 className="w-full border border-gray-300 rounded-xl px-4 py-2 bg-white text-gray-900 focus:ring-blue-500 focus:border-blue-500 transition"
               />
               <textarea
-                rows={3}
+                rows={6} // Aumentado o espaço para descrição
                 placeholder="Descrição"
                 value={editModal.Descricao}
                 onChange={(e) => setEditModal({ ...editModal, Descricao: e.target.value })}
                 className="w-full border border-gray-300 rounded-xl px-4 py-2 bg-white text-gray-900 resize-none focus:ring-blue-500 focus:border-blue-500 transition"
               />
+              
+              <button
+                onClick={() => handleDelete(editModal.id)}
+                type="button"
+                className="w-full flex justify-center items-center gap-2 text-red-600 border border-red-300 py-2 rounded-xl hover:bg-red-50 transition-all text-sm mt-6"
+              >
+                <Trash2 size={16} /> Excluir Exercício
+              </button>
             </div>
-            
-            <button
-              onClick={() => handleDelete(editModal.id)}
-              type="button"
-              className="w-full flex justify-center items-center gap-2 text-red-600 border border-red-300 py-2 rounded-xl hover:bg-red-50 transition-all text-sm mt-6"
-            >
-              <Trash2 size={16} /> Excluir Exercício
-            </button>
           </div>
         </Modal>
       )}
@@ -486,33 +489,38 @@ export default function ExercicioDashboard() {
 // Componente Modal Reutilizável
 const Modal = ({ title, onClose, onSubmit, children, submitting, size = 'max-w-lg' }) => (
     <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4 animate-in fade-in duration-200"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div 
-        className={`relative bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-full ${size}`}
-        style={{ maxHeight: '95vh', overflow: 'hidden' }}
-        onClick={(e) => e.stopPropagation()} // Impede fechar ao clicar dentro
+        className={`relative bg-white rounded-2xl shadow-2xl flex flex-col w-full ${size}`}
+        style={{ maxHeight: '90vh' }}
+        onClick={(e) => e.stopPropagation()} 
       >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-red-500 transition p-2 rounded-full hover:bg-gray-100"
-        >
-          <X size={24} />
-        </button>
+        <div className="flex justify-between items-center p-6 border-b border-gray-100">
+             <h2 className="text-xl md:text-2xl font-bold text-gray-800">
+               {title}
+             </h2>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-red-500 transition p-2 rounded-full hover:bg-gray-100"
+            >
+              <X size={24} />
+            </button>
+        </div>
 
-        <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-3">
-          {title}
-        </h2>
+        <div className="flex-1 overflow-y-auto p-6">
+            <form id="modal-form" onSubmit={onSubmit} className="h-full">
+                {children}
+            </form>
+        </div>
 
-        <form onSubmit={onSubmit} className="space-y-4 overflow-y-auto pr-2" style={{ maxHeight: 'calc(95vh - 100px)' }}>
-          {children}
-
-          <div className="pt-2">
+        <div className="p-6 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
             <button
               type="submit"
+              form="modal-form"
               disabled={submitting}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 shadow-lg shadow-blue-200"
             >
               {submitting ? (
                 <>
@@ -523,8 +531,7 @@ const Modal = ({ title, onClose, onSubmit, children, submitting, size = 'max-w-l
                 "Salvar Alterações"
               )}
             </button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
 );
@@ -540,31 +547,34 @@ const VideoPreview = ({ editModal, setEditModal }) => {
         : null; // Nenhum vídeo
 
     return (
-        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 h-full flex flex-col">
             <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
                 <Video size={18} className="text-blue-500" /> Vídeo de Demonstração
             </h3>
 
-            <div className="w-full flex justify-center mb-4">
+            <div className="w-full flex justify-center mb-4 flex-grow bg-black/5 rounded-xl min-h-[300px] items-center">
                 {videoSrc ? (
-                    <div className="max-w-full overflow-hidden rounded-xl border border-gray-300 shadow-md">
+                    <div className="w-full h-full flex justify-center items-center overflow-hidden rounded-xl shadow-inner">
                         <video
                             controls
-                            className="aspect-video w-full max-w-[500px]"
+                            className="max-h-[500px] w-auto h-auto object-contain rounded-lg" // Alterado para object-contain e controle de altura máxima
                             src={videoSrc}
                             key={videoSrc} // Força a re-renderização se o src mudar
                         />
                     </div>
                 ) : (
-                    <div className="rounded-xl border-2 border-dashed border-gray-300 bg-white flex items-center justify-center w-full max-w-[500px] aspect-video">
-                        <span className="text-gray-500 text-sm">Nenhum vídeo vinculado</span>
+                    <div className="rounded-xl border-2 border-dashed border-gray-300 bg-white flex items-center justify-center w-full h-[300px]">
+                        <span className="text-gray-500 text-sm flex flex-col items-center gap-2">
+                             <Video size={32} className="opacity-20"/>
+                             Nenhum vídeo vinculado
+                        </span>
                     </div>
                 )}
             </div>
 
-            <div className="flex flex-col items-center">
-                <label className="cursor-pointer px-4 py-2 rounded-full text-sm font-medium bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 transition">
-                    {editModal.videos?.[0]?.url ? "Alterar Vídeo" : "Adicionar Vídeo"}
+            <div className="flex flex-col items-center mt-auto">
+                <label className="cursor-pointer w-full text-center px-4 py-3 rounded-xl text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:border-blue-500 hover:text-blue-600 transition shadow-sm">
+                    {editModal.videos?.[0]?.url ? "Substituir Vídeo" : "Adicionar Vídeo"}
                     <input
                         type="file"
                         accept="video/*"
@@ -578,8 +588,8 @@ const VideoPreview = ({ editModal, setEditModal }) => {
                     />
                 </label>
                 {editModal.newFile && (
-                    <p className="text-xs text-red-500 mt-2">
-                        Novo arquivo selecionado. Salve para confirmar a alteração.
+                    <p className="text-xs text-green-600 mt-2 font-medium bg-green-50 px-2 py-1 rounded-md">
+                        Novo arquivo selecionado.
                     </p>
                 )}
             </div>

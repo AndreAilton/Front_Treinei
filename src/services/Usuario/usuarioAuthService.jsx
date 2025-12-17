@@ -64,6 +64,35 @@ export const getdadosUsuario = async () => {
 };
 
 
+export const esqueciSenhaUsuario = async (email) => {
+  try {
+    const response = await axios.post(`${API_URL}/usuarios/forgot-password`, { email });
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao enviar email de recuperação", error.response?.data || error);
+    throw new Error(
+      error.response?.data?.message ||
+      "Erro ao enviar email de recuperação."
+    );
+  }
+};
+
+export const resetarSenhaUsuario = async (email, token, newPassword) => {
+  try {
+    const response = await axios.post(`${API_URL}/usuarios/reset-password`, {
+      email,
+      password: newPassword,
+      token
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao resetar senha", error.response?.data || error);
+    throw new Error(
+      error.response?.data?.message ||
+      "Erro ao resetar senha."
+    );
+  }
+};
 
 // 🔹 Logout
 export const logoutUsuario = () => {

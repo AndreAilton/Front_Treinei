@@ -9,7 +9,7 @@ import AuthUsuario from "./components/UsuarioAuth";
 import EscolherTreinador from "./components/EscolherTreinador";
 import DietaDashboard from "./components/DietaDashboard";
 import MeusTreinos from "./components/MeusTreinos";
-
+import AlterarSenha from "./components/AlterarSenha";
 // PROTEÇÕES
 import ProtectedRoute from "./routes/ProtectedRoute";
 import RoleRoute from "./routes/RoleRoute";
@@ -22,6 +22,7 @@ export default function MainRoutes() {
       {/* LOGIN */}
       <Route path="/auth-treinador" element={<Auth />} />
       <Route path="/auth-usuario" element={<AuthUsuario />} />
+      <Route path="/reset-password/:token" element={<AlterarSenha />} />
 
       {/* ROTAS DO TREINADOR */}
       <Route

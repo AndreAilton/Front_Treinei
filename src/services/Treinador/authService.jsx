@@ -63,6 +63,36 @@ export const loginTrainer = async (email, password) => {
   }
 };
 
+export const esqueciSenhaTreinador= async (email) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/treinadores/forgot-password`, { email });
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao enviar email de recuperação", error.response?.data || error);
+    throw new Error(
+      error.response?.data?.message ||
+      "Erro ao enviar email de recuperação."
+    );
+  }
+};
+
+export const resetarSenhaTreinador = async (email, token, newPassword) => {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/treinadores/reset-password`, {
+      email,
+      password: newPassword,
+      token
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Erro ao resetar senha", error.response?.data || error);
+    throw new Error(
+      error.response?.data?.message ||
+      "Erro ao resetar senha."
+    );
+  }
+};
+
 // 🔹 Logout de treinador
 export const logoutTrainer = () => {
   localStorage.removeItem("trainer_token");
