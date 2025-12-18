@@ -1,16 +1,23 @@
-# ---------- STAGE 1: BUILD ----------
+# --- Estágio 1: Build ---
 FROM node:20-alpine AS build
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm install
+COPY package.json package-lock.json ./
+RUN npm ci
 
 COPY . .
-RUN npm run build
-# Vite gera a pasta /dist
 
-# ---------- STAGE 2: NGINX ----------
+# --- ADICIONE ESTAS DUAS LINHAS ANTES DO BUILD ---
+# 1. Recebe o argumento do docker-compose
+ARG VITE_API_URL
+# 2. Transforma em variável de ambiente para o Vite ler durante o build
+ENV VITE_API_URL=$VITE_API_URL
+# -------------------------------------------------
+
+RUN npm run build
+
+# --- Estágio 2: Nginx ---
 FROM nginx:alpine
 
 # Remove config padrão
