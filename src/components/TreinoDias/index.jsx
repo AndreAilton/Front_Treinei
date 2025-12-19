@@ -56,7 +56,7 @@ const ExercicioModal = ({
 
   // Tratamento da URL do vídeo
   const videoUrl = selectedExercicio.videos?.[0]?.url
-    ? `${selectedExercicio.videos[0].url.replace(/^https?:\/\//, "")}`
+    ? `${selectedExercicio.videos[0].url}`
     : null;
 
   return (
