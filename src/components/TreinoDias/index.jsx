@@ -13,8 +13,8 @@ import {
   Plus,
   RefreshCw,
   Loader2,
-  Video,       // Novo import
-  PlayCircle   // Novo import
+  Video,
+  PlayCircle
 } from "lucide-react";
 
 import { getExercicios } from "../../services/Treinador/ExerciciosService";
@@ -54,9 +54,8 @@ const ExercicioModal = ({
 }) => {
   if (!isModalOpen || !selectedExercicio) return null;
 
-  // Tratamento da URL do vídeo
   const videoUrl = selectedExercicio.videos?.[0]?.url
-    ? `http://${selectedExercicio.videos[0].url.replace(/^https?:\/\//, "")}`
+    ? `${selectedExercicio.videos[0].url}`
     : null;
 
   return (
@@ -69,7 +68,6 @@ const ExercicioModal = ({
         className="bg-white rounded-2xl shadow-2xl relative w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col md:flex-row transition-all"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Botão fechar */}
         <button
           onClick={fecharModal}
           className="absolute top-4 right-4 z-50 text-gray-400 hover:text-red-500 transition p-2 rounded-full bg-white/80 hover:bg-white shadow-sm border border-transparent hover:border-gray-200"
@@ -77,111 +75,105 @@ const ExercicioModal = ({
           <X size={24} />
         </button>
 
-        {/* --- LADO ESQUERDO: VÍDEO (Sem cortar 9:16) --- */}
+        {/* --- LADO ESQUERDO: VÍDEO --- */}
         <div className="w-full md:w-5/12 bg-gray-900 flex flex-col justify-center items-center relative min-h-[250px] md:min-h-auto">
-            {videoUrl ? (
-                <video
-                    src={videoUrl}
-                    controls
-                    // 'object-contain' garante que o vídeo inteiro apareça sem cortes, adicionando barras pretas se necessário
-                    className="w-full h-full object-contain bg-black max-h-[40vh] md:max-h-full"
-                />
-            ) : (
-                <div className="text-center p-8 text-gray-500 flex flex-col items-center">
-                    <PlayCircle size={48} className="mb-3 opacity-20" />
-                    <p className="text-sm">Vídeo não disponível</p>
-                </div>
-            )}
-            
-            {/* Título visível sobre o vídeo apenas no mobile */}
-            <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/80 to-transparent md:hidden">
-                <h2 className="text-white font-bold text-lg truncate">{selectedExercicio.nome}</h2>
+          {videoUrl ? (
+            <video
+              src={videoUrl}
+              controls
+              className="w-full h-full object-contain bg-black max-h-[40vh] md:max-h-full"
+            />
+          ) : (
+            <div className="text-center p-8 text-gray-500 flex flex-col items-center">
+              <PlayCircle size={48} className="mb-3 opacity-20" />
+              <p className="text-sm">Vídeo não disponível</p>
             </div>
+          )}
+          
+          <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black/80 to-transparent md:hidden">
+            <h2 className="text-white font-bold text-lg truncate">{selectedExercicio.nome}</h2>
+          </div>
         </div>
 
         {/* --- LADO DIREITO: FORMULÁRIO E DADOS --- */}
         <div className="w-full md:w-7/12 p-6 md:p-8 overflow-y-auto bg-white flex flex-col">
             
-            {/* Header (Visível apenas Desktop) */}
-            <div className="hidden md:block mb-6 border-b border-gray-100 pb-4">
-                <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                    {selectedExercicio.nome}
-                </h2>
-                <div className="flex gap-4 mt-2 text-sm text-gray-500">
-                    <span className="flex items-center gap-1 bg-purple-50 text-purple-700 px-2 py-0.5 rounded-md">
-                        <Layers size={14}/> {selectedExercicio.Categoria}
-                    </span>
-                    <span className="flex items-center gap-1 bg-green-50 text-green-700 px-2 py-0.5 rounded-md">
-                        <Target size={14}/> {selectedExercicio.Grupo_Muscular}
-                    </span>
-                </div>
+          <div className="hidden md:block mb-6 border-b border-gray-100 pb-4">
+            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+              {selectedExercicio.nome}
+            </h2>
+            <div className="flex gap-4 mt-2 text-sm text-gray-500">
+              <span className="flex items-center gap-1 bg-purple-50 text-purple-700 px-2 py-0.5 rounded-md">
+                <Layers size={14}/> {selectedExercicio.Categoria}
+              </span>
+              <span className="flex items-center gap-1 bg-green-50 text-green-700 px-2 py-0.5 rounded-md">
+                <Target size={14}/> {selectedExercicio.Grupo_Muscular}
+              </span>
             </div>
+          </div>
 
-            {/* Inputs em Grid */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
-                <InputGroup
-                    label="Séries"
-                    Icon={Layers}
-                    value={editData.Series}
-                    onChange={(e) => setEditData({ ...editData, Series: Number(e.target.value) })}
-                    type="number"
-                    min={1}
-                />
-                <InputGroup
-                    label="Reps"
-                    Icon={Repeat}
-                    value={editData.Repeticoes}
-                    onChange={(e) => setEditData({ ...editData, Repeticoes: Number(e.target.value) })}
-                    type="number"
-                    min={1}
-                />
-                <InputGroup
-                    label="Descanso"
-                    Icon={Clock}
-                    value={editData.Descanso}
-                    onChange={(e) => setEditData({ ...editData, Descanso: Number(e.target.value) })}
-                    type="number"
-                    min={0}
-                />
-            </div>
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <InputGroup
+              label="Séries"
+              Icon={Layers}
+              value={editData.Series}
+              onChange={(e) => setEditData({ ...editData, Series: Number(e.target.value) })}
+              type="number"
+              min={1}
+            />
+            <InputGroup
+              label="Reps"
+              Icon={Repeat}
+              value={editData.Repeticoes}
+              onChange={(e) => setEditData({ ...editData, Repeticoes: Number(e.target.value) })}
+              type="number"
+              min={1}
+            />
+            <InputGroup
+              label="Descanso"
+              Icon={Clock}
+              value={editData.Descanso}
+              onChange={(e) => setEditData({ ...editData, Descanso: Number(e.target.value) })}
+              type="number"
+              min={0}
+            />
+          </div>
 
-            <div className="mb-6">
-                <label className="font-semibold text-gray-700 flex items-center gap-1.5 mb-1.5 text-sm">
-                    <FileText size={16} className="text-blue-500" /> Observações Técnicas
-                </label>
-                <textarea
-                    className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-800 bg-gray-50 focus:bg-white resize-none"
-                    rows={4}
-                    value={editData.Observacoes}
-                    onChange={(e) => setEditData({ ...editData, Observacoes: e.target.value })}
-                    placeholder="Ex: Controlar a descida, focar na contração..."
-                />
-            </div>
+          <div className="mb-6">
+            <label className="font-semibold text-gray-700 flex items-center gap-1.5 mb-1.5 text-sm">
+              <FileText size={16} className="text-blue-500" /> Observações Técnicas
+            </label>
+            <textarea
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-800 bg-gray-50 focus:bg-white resize-none"
+              rows={4}
+              value={editData.Observacoes}
+              onChange={(e) => setEditData({ ...editData, Observacoes: e.target.value })}
+              placeholder="Ex: Controlar a descida, focar na contração..."
+            />
+          </div>
 
-            {/* Botões de Ação */}
-            <div className="mt-auto pt-4 flex flex-col sm:flex-row gap-3">
-                <button
-                    onClick={salvarAlteracoes}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition-all shadow-lg shadow-blue-200 active:scale-[0.98]"
-                >
-                    Salvar Configuração
-                </button>
-                <button
-                    onClick={fecharModal}
-                    className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all"
-                >
-                    Cancelar
-                </button>
-            </div>
+          <div className="mt-auto pt-4 flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={salvarAlteracoes}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition-all shadow-lg shadow-blue-200 active:scale-[0.98]"
+            >
+              Salvar Configuração
+            </button>
+            <button
+              onClick={fecharModal}
+              className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-all"
+            >
+              Cancelar
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-// --- Sub-Componente: ExercicioCard (SEU DESIGN ORIGINAL MANTIDO) ---
+// --- Sub-Componente: ExercicioCard ---
 const ExercicioCard = ({ ex, index, onDoubleClick, isDayItem = false }) => {
-  // O draggableId deve ser único. Para o dia, usamos o idTreinoDia (se existir).
   const draggableId = isDayItem ? (ex.idTreinoDia ? ex.idTreinoDia.toString() : `${ex.id}-temp`) : ex.id.toString();
 
   const Card = useCallback(
@@ -193,7 +185,11 @@ const ExercicioCard = ({ ex, index, onDoubleClick, isDayItem = false }) => {
         onDoubleClick={() => onDoubleClick(ex)}
         className={`
           bg-white border rounded-xl p-3 shadow cursor-grab hover:shadow-lg transition-all 
-          ${isDayItem ? "border-gray-200 mb-2" : "border-blue-100 hover:border-blue-400 w-full sm:w-[200px]"}
+          ${isDayItem 
+             ? "border-gray-200 mb-2 w-full" 
+             : "border-blue-100 hover:border-blue-400 w-full sm:w-[calc(50%-0.5rem)] xl:w-[calc(33.33%-0.5rem)]" 
+             // Ajuste de largura para o card de disponibilidade (responsivo)
+           }
         `}
       >
         <h3 className="font-semibold text-gray-900 truncate flex items-center gap-1">
@@ -238,7 +234,7 @@ const ExercicioCard = ({ ex, index, onDoubleClick, isDayItem = false }) => {
 };
 
 
-// --- Componente Principal: TreinoDias (SEU DESIGN ORIGINAL MANTIDO) ---
+// --- Componente Principal: TreinoDias ---
 export default function TreinoDias() {
   const [exercicios, setExercicios] = useState([]);
   const [filteredExercicios, setFilteredExercicios] = useState([]);
@@ -252,6 +248,17 @@ export default function TreinoDias() {
     grupo: "",
     treinoSearch: "",
   });
+
+  // 🔹 Estado para corrigir problema de Hydration/Renderização do DnD no React 18
+  const [dndReady, setDndReady] = useState(false);
+
+  useEffect(() => {
+    const animation = requestAnimationFrame(() => setDndReady(true));
+    return () => {
+      cancelAnimationFrame(animation);
+      setDndReady(false);
+    };
+  }, []);
 
   // 🔹 Estado do modal
   const [selectedExercicio, setSelectedExercicio] = useState(null);
@@ -289,7 +296,6 @@ export default function TreinoDias() {
     }
   }, [fecharModal]);
 
-  // Popula editData com valores do exercício selecionado ou defaults
   useEffect(() => {
     if (selectedExercicio) {
       setEditData({
@@ -301,7 +307,6 @@ export default function TreinoDias() {
     }
   }, [selectedExercicio]);
 
-  // 🔹 Carrega Exercícios e Treinos Iniciais
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -328,7 +333,6 @@ export default function TreinoDias() {
     loadData();
   }, [loadData]);
 
-  // 🔹 Buscar TreinoDias do backend (ao mudar o treino selecionado)
   useEffect(() => {
     if (!treinoSelecionado || loading || exercicios.length === 0) return;
 
@@ -366,7 +370,6 @@ export default function TreinoDias() {
     fetchTreinoDias();
   }, [treinoSelecionado, exercicios, diasSemana, loading]);
 
-  // 🔹 Filtros de exercícios disponíveis
   useEffect(() => {
     let filtered = exercicios;
     if (filters.search) {
@@ -381,7 +384,6 @@ export default function TreinoDias() {
       filtered = filtered.filter((ex) => ex.Grupo_Muscular === filters.grupo);
     }
 
-    // Filtra exercícios que JÁ estão na semana
     const idsNaSemana = Object.values(treinoDias)
       .flat()
       .map((ex) => ex.id);
@@ -390,7 +392,6 @@ export default function TreinoDias() {
     setFilteredExercicios(filtered);
   }, [filters, exercicios, treinoDias]);
 
-  // 🔹 Função para salvar alterações (local + backend)
   const salvarAlteracoes = async () => {
     if (!selectedExercicio) return;
 
@@ -405,7 +406,6 @@ export default function TreinoDias() {
       if (selectedExercicio.idTreinoDia) {
         await updateTreinoDia(selectedExercicio.idTreinoDia, payload);
 
-        // Atualiza estado treinoDias local
         const novoTreinoDias = { ...treinoDias };
         const updatedTreinoDias = Object.fromEntries(
           Object.entries(novoTreinoDias).map(([dia, exs]) => [
@@ -420,7 +420,6 @@ export default function TreinoDias() {
         setTreinoDias(updatedTreinoDias);
         alert("Configurações do exercício atualizadas com sucesso!");
       } else {
-        // Atualiza filteredExercicios (para exercícios na lista de origem)
         const updatedFiltered = filteredExercicios.map((ex) =>
           ex.id === selectedExercicio.id ? { ...ex, ...payload } : ex
         );
@@ -435,7 +434,6 @@ export default function TreinoDias() {
     }
   };
 
-  // 🔹 Drag & Drop principal
   const onDragEnd = async (result) => {
     const { source, destination } = result;
     if (!destination) return;
@@ -445,35 +443,15 @@ export default function TreinoDias() {
     const newTreino = { ...treinoDias };
     const sourceDia = source.droppableId;
     const destinationDia = destination.droppableId;
-
-    // 1. REMOVER (arrastando para a lista de exercícios)
-    if (sourceDia !== "exercicios" && destinationDia === "exercicios") {
-      const [exercicioRemovido] = newTreino[sourceDia].splice(source.index, 1);
-      setTreinoDias(newTreino);
-
-      const confirmar = window.confirm(
-        `Deseja realmente remover o exercício "${exercicioRemovido.nome}" do dia ${sourceDia}?`
-      );
-
-      if (confirmar && exercicioRemovido?.idTreinoDia) {
-        try {
-          await deleteTreinoDia(exercicioRemovido.idTreinoDia);
-          // O useEffect de filtros cuidará de repopular filteredExercicios
-        } catch (err) {
-          console.error("❌ Erro ao remover treino-dia:", err);
-          alert("Erro ao remover o exercício no servidor.");
-        }
-      }
-      return;
-    }
-
-    // 2. ADICIONAR (arrastando da lista de exercícios para um dia)
+// 2. ADICIONAR (arrastando da lista de exercícios para um dia)
     if (sourceDia === "exercicios" && destinationDia !== "exercicios") {
       const exercicioMovido = filteredExercicios[source.index];
 
+      // Verifica duplicidade visual
       if (newTreino[destinationDia].some((ex) => ex.id === exercicioMovido.id)) return;
 
-      const novoExercicio = {
+      // Objeto completo para a Interface (UI) - Precisa de tudo para renderizar o card
+      const novoExercicioUI = {
         ...exercicioMovido,
         Series: exercicioMovido.Series ?? 4,
         Repeticoes: exercicioMovido.Repeticoes ?? 12,
@@ -481,28 +459,46 @@ export default function TreinoDias() {
         Observacoes: exercicioMovido.Observacoes ?? "Executar com carga moderada",
       };
       
-      newTreino[destinationDia].splice(destination.index, 0, novoExercicio);
+      // Atualiza a UI imediatamente (Optimistic UI)
+      newTreino[destinationDia].splice(destination.index, 0, novoExercicioUI);
       setTreinoDias(newTreino);
 
       try {
-        const novoRegistro = await createTreinoDia({
+        // 🔹 CORREÇÃO: Payload Limpo apenas com o que o Backend espera
+        const payloadBackend = {
           id_treino: Number(treinoSelecionado),
           Dia_da_Semana: destinationDia,
           id_Exercicio: exercicioMovido.id,
-          ...novoExercicio,
+          Series: novoExercicioUI.Series,
+          Repeticoes: novoExercicioUI.Repeticoes,
+          Descanso: novoExercicioUI.Descanso,
+          Observacoes: novoExercicioUI.Observacoes
+        };
+
+        const novoRegistro = await createTreinoDia(payloadBackend);
+
+        // Atualiza o item na tela com o ID real gerado pelo banco (idTreinoDia)
+        // Isso é crucial para poder deletar ou mover depois sem recarregar a tela
+        const updatedTreinoDias = { ...newTreino };
+        updatedTreinoDias[destinationDia] = updatedTreinoDias[destinationDia].map(ex => {
+            // Se for o exercício que acabamos de adicionar (identificado pelo ID do exercício)
+            // E ainda não tiver idTreinoDia, atualizamos.
+            if (ex.id === exercicioMovido.id && !ex.idTreinoDia) {
+                return { ...ex, idTreinoDia: novoRegistro.id };
+            }
+            return ex;
         });
 
-        // Atualiza o estado local com o ID do backend
-        novoExercicio.idTreinoDia = novoRegistro.id;
-        setTreinoDias({ ...newTreino });
+        setTreinoDias(updatedTreinoDias);
 
       } catch (err) {
         console.error("❌ Erro ao criar treino-dia:", err);
+        // Opcional: Reverter a UI se der erro
+        alert("Erro ao salvar o exercício no banco de dados.");
       }
       return;
     }
 
-    // 3. MOVER ENTRE DIAS (ATUALIZA O DIA DA SEMANA)
     if (sourceDia !== destinationDia) {
       const [moved] = newTreino[sourceDia].splice(source.index, 1);
       
@@ -524,7 +520,6 @@ export default function TreinoDias() {
       return;
     }
 
-    // 4. REORDER (dentro do mesmo dia)
     if (sourceDia === destinationDia) {
       const diaAtual = Array.from(newTreino[sourceDia]);
       const [reordered] = diaAtual.splice(source.index, 1);
@@ -544,7 +539,11 @@ export default function TreinoDias() {
   ), [exercicios]);
 
 
-  // 🔹 Renderização
+  // Se o DnD não estiver pronto (evita bug de hydration/render primeira vez), retorna loading ou null temporário
+  if (!dndReady && !loading) {
+      return null;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8 flex flex-col">
       <div className="flex flex-col max-w-8xl mx-auto w-full bg-white shadow-2xl rounded-2xl p-6 md:p-8 border border-gray-100">
@@ -553,7 +552,6 @@ export default function TreinoDias() {
           <Calendar size={30} className="text-blue-600"/> Montar Treino da Semana
         </h1>
 
-        {/* 🔹 Controle de Seleção de Treino e Filtros */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 p-4 border rounded-xl bg-blue-50">
             <div className="flex items-center gap-3 w-full sm:w-auto">
                 <label className="font-semibold text-gray-700 whitespace-nowrap flex items-center gap-1">
@@ -608,8 +606,7 @@ export default function TreinoDias() {
                             <Plus size={20} className="text-green-600"/> Exercícios Disponíveis
                         </h3>
 
-                        {/* Filtros do painel de exercícios */}
-                        <div className="space-y-3 mb-4">
+                        <div className="space-y-3 mb-4 ">
                             <input
                                 type="text"
                                 placeholder="Buscar exercício..."
@@ -635,7 +632,7 @@ export default function TreinoDias() {
                                     {grupos.map(g => <option key={g} value={g}>{g}</option>)}
                                 </select>
                             </div>
-                            <p className="text-xs text-gray-500 italic">
+                            <p className="text-xs text-gray-500 italic ">
                                 Dica: Arraste para o dia ou Duplo Clique para editar.
                             </p>
                         </div>
@@ -645,10 +642,11 @@ export default function TreinoDias() {
                                 <div
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
-                                    className="flex-1 space-y-3 overflow-y-auto pr-2"
+                                    // 🔹 CORREÇÃO: Flex-wrap, gap para espaçamento e removido space-y rígido
+                                    className="flex flex-wrap gap-2 overflow-y-auto pr-2 content-start h-full max-h-[600px]"
                                 >
                                     {filteredExercicios.length === 0 ? (
-                                        <p className="text-gray-500 italic text-sm text-center py-4">
+                                        <p className="text-gray-500 italic text-sm text-center py-4 w-full">
                                             Nenhum exercício disponível.
                                         </p>
                                     ) : (
@@ -689,7 +687,7 @@ export default function TreinoDias() {
 
                                         {(treinoDias[dia] || []).map((ex, index) => (
                                             <ExercicioCard
-                                                key={ex.idTreinoDia || `${ex.id}-temp`} // Usa idTreinoDia como chave primária
+                                                key={ex.idTreinoDia || `${ex.id}-temp`}
                                                 ex={ex}
                                                 index={index}
                                                 onDoubleClick={abrirModal}
@@ -715,7 +713,6 @@ export default function TreinoDias() {
 
       </div>
 
-      {/* 🔹 MODAL DE EXERCÍCIO (AGORA ATUALIZADO) */}
       <ExercicioModal
         selectedExercicio={selectedExercicio}
         isModalOpen={isModalOpen}
