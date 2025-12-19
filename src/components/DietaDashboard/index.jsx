@@ -44,7 +44,7 @@ const DietaCard = ({ dieta, onView, onDelete }) => (
       <div className="flex gap-1">
         {dieta.url && (
             <a
-                href={`http://${dieta.url}`}
+                href={`https://${dieta.url}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => e.stopPropagation()} // Impede abrir o modal de detalhes
@@ -309,7 +309,7 @@ export default function DietaDashboard() {
               {/* BOTÃO PRINCIPAL DE VISUALIZAR NO MODAL */}
               {viewModal.url ? (
                  <a 
-                   href={`http://${viewModal.url}`} 
+                   href={`https://${viewModal.url}`} 
                    target="_blank" 
                    rel="noopener noreferrer"
                    className="inline-flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition shadow-md"

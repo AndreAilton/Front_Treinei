@@ -73,7 +73,7 @@ const ExercicioModal = ({ item, aoFechar }) => {
   if (!item) return null;
 
   const rawUrl = item.exercicio?.videos?.[0]?.url;
-  const videoUrl = rawUrl ? (rawUrl.startsWith('http') ? rawUrl : `http://${rawUrl}`) : null;  // Correção na verificação da URL
+  const videoUrl = rawUrl ? (rawUrl.startsWith('http') ? rawUrl : `https://${rawUrl}`) : null;  // Correção na verificação da URL
   console.log(rawUrl);
 
   return (
@@ -248,7 +248,7 @@ export default function MeusTreinos() {
             
             {linkDieta && (
                 <a
-                    href={linkDieta.startsWith('http') ? linkDieta : `http://${linkDieta}`} 
+                    href={linkDieta.startsWith('http') ? linkDieta : `https://${linkDieta}`} 
                     target="_blank"
                     rel="noopener noreferrer"
                     className="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-5 py-2 rounded-xl font-semibold transition-all flex items-center gap-2"

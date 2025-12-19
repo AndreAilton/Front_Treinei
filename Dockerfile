@@ -10,9 +10,10 @@ COPY . .
 
 # --- ADICIONE ESTAS DUAS LINHAS ANTES DO BUILD ---
 # 1. Recebe o argumento do docker-compose
-ARG VITE_API_URL
+# ARG VITE_API_URL
 # 2. Transforma em variável de ambiente para o Vite ler durante o build
-ENV VITE_API_URL=$VITE_API_URL
+# ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_API_URL=https://fitnessapi.andreailtondev.tech
 # -------------------------------------------------
 
 RUN npm run build
