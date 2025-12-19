@@ -543,7 +543,7 @@ const VideoPreview = ({ editModal, setEditModal }) => {
     const videoSrc = editModal.newFile 
       ? URL.createObjectURL(editModal.newFile) // Novo vídeo
       : editModal.videos?.[0]?.url 
-        ? `https://${editModal.videos[0].url}` // Vídeo existente (assumindo https:// é necessário)
+        ? `${editModal.videos[0].url}` // Vídeo existente (assumindo https:// é necessário)
         : null; // Nenhum vídeo
 
     return (
