@@ -24,6 +24,22 @@ export const getExercicios = async () => {
   }
 };
 
+export const getExerciciosPublicos = async () => {
+  try {
+    const response = await axios.get(`${API_URL}/publico`, {
+      headers: getAuthHeader(),
+    });
+
+    // ✅ Retorna o array correto da resposta
+    return response.data.exercicios || [];
+  } catch (error) {
+    console.error("Erro ao buscar exercícios:", error.response?.data || error);
+    return [];
+  }
+};
+
+
+
 // 🔹 Buscar exercício por ID (para visualizar e editar)
 export const getExercicioById = async (id) => {
   try {
