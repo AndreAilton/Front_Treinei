@@ -13,6 +13,7 @@ COPY . .
 ARG VITE_API_URL
 # 2. Transforma em variável de ambiente para o Vite ler durante o build
 ENV VITE_API_URL=$VITE_API_URL
+
 # -------------------------------------------------
 
 RUN npm run build

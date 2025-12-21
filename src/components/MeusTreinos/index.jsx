@@ -68,36 +68,41 @@ const ExercicioCard = ({ item, aoClicar }) => {
   );
 };
 
-// --- 3. MODAL DE DETALHES ---
+// --- 3. MODAL DE DETALHES (CORRIGIDO) ---
 const ExercicioModal = ({ item, aoFechar }) => {
   if (!item) return null;
 
   const rawUrl = item.exercicio?.videos?.[0]?.url;
-  const videoUrl = rawUrl ? (rawUrl.startsWith('http') ? rawUrl : `http://${rawUrl}`) : null;  // Correção na verificação da URL
-  console.log(rawUrl);
+  const videoUrl = rawUrl ? (rawUrl.startsWith('http') ? rawUrl : `${rawUrl}`) : null;
 
   return (
     <div 
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
         onClick={aoFechar}
     >
       <div 
         onClick={(e) => e.stopPropagation()}
+        // CORREÇÃO: flex-col para mobile, altura controlada e overflow hidden para bordas arredondadas
         className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col lg:flex-row relative"
       >
+        {/* Botão Fechar com z-index alto para ficar sobre o vídeo */}
         <button 
           onClick={aoFechar} 
-          className="absolute top-4 right-4 z-50 bg-white hover:bg-red-50 text-gray-500 hover:text-red-500 p-2 rounded-full transition-all shadow-md"
+          className="absolute top-4 right-4 z-[60] bg-white/90 hover:bg-red-50 text-gray-600 hover:text-red-500 p-2 rounded-full transition-all shadow-md backdrop-blur-sm"
         >
           <X size={20} />
         </button>
 
-        {/* Lado Esquerdo: Vídeo */}
-        <div className="w-full lg:w-5/12 bg-gray-900 flex flex-col justify-center items-center relative min-h-[250px] lg:min-h-full">
+        {/* Lado Esquerdo: Vídeo 
+           CORREÇÃO: h-[250px] fixo no mobile e shrink-0 para não ser esmagado. 
+           No desktop (lg) volta para h-auto/full.
+        */}
+        <div className="w-full lg:w-5/12 bg-gray-900 flex flex-col justify-center items-center relative h-[250px] lg:h-auto shrink-0">
             {videoUrl ? (
                  <video
                     src={videoUrl}
                     controls
+                    playsInline
                     className="w-full h-full object-contain bg-black"
                     preload="metadata"
                   />
@@ -109,8 +114,10 @@ const ExercicioModal = ({ item, aoFechar }) => {
             )}
         </div>
 
-        {/* Lado Direito: Informações */}
-        <div className="w-full lg:w-7/12 p-6 md:p-8 overflow-y-auto bg-white">
+        {/* Lado Direito: Informações 
+           CORREÇÃO: flex-1 para ocupar o espaço restante e overflow-y-auto para scroll interno
+        */}
+        <div className="flex-1 w-full lg:w-7/12 p-6 md:p-8 overflow-y-auto bg-white min-h-0">
             <div className="mb-6">
                 <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
                     {item.Dia_da_Semana || "Detalhes"}
@@ -138,9 +145,9 @@ const ExercicioModal = ({ item, aoFechar }) => {
 
             <button 
                 onClick={aoFechar}
-                className="mt-8 w-full bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-semibold transition-all"
+                className="mt-8 w-full bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded-xl font-semibold transition-all lg:hidden"
             >
-                Concluir Visualização
+                Fechar
             </button>
         </div>
       </div>
@@ -150,7 +157,6 @@ const ExercicioModal = ({ item, aoFechar }) => {
 
 // --- 4. COMPONENTE PRINCIPAL ---
 export default function MeusTreinos() {
-  // === CORREÇÃO AQUI: Declaração correta do estado ===
   const [itemSelecionado, setItemSelecionado] = useState(null); 
   const [usuario, setUsuario] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -164,7 +170,6 @@ export default function MeusTreinos() {
     setLoading(true);
     try {
       const response = await getdadosUsuario();
-      // Tenta pegar o user de forma segura
       const data = response?.data?.user || response?.data || response;
       setUsuario(data);
     } catch (error) {
@@ -178,13 +183,11 @@ export default function MeusTreinos() {
     carregarUsuario();
   }, [carregarUsuario]);
 
-  // Extração segura dos dados
   const treinoUsuario = usuario?.usuarios_treino?.[0];
   const treino = treinoUsuario?.treino;
   const dias = treino?.treinos_dia || [];
   const linkDieta = treinoUsuario?.dieta;
 
-  // Lógica de agrupamento
   const exerciciosAgrupados = useMemo(() => {
     if (!dias || dias.length === 0) return [];
 
@@ -196,7 +199,6 @@ export default function MeusTreinos() {
         if (!ex || !ex.exercicio) return acc;
 
         const videos = ex.exercicio.videos || [];
-        // Se não tiver categoria definida, usa "Geral"
         const categories = videos.length > 0 
           ? Array.from(new Set(videos.map(v => v?.category).filter(Boolean))) 
           : ["Geral"];
@@ -248,7 +250,7 @@ export default function MeusTreinos() {
             
             {linkDieta && (
                 <a
-                    href={linkDieta.startsWith('http') ? linkDieta : `http://${linkDieta}`} 
+                    href={linkDieta.startsWith('http') ? linkDieta : `${linkDieta}`} 
                     target="_blank"
                     rel="noopener noreferrer"
                     className="bg-white/10 hover:bg-white/20 border border-white/20 text-white px-5 py-2 rounded-xl font-semibold transition-all flex items-center gap-2"
@@ -281,7 +283,6 @@ export default function MeusTreinos() {
                         <ExercicioCard
                           key={exercicio.id || index}
                           item={exercicio}
-                          // Aqui passamos a função para abrir o modal
                           aoClicar={setItemSelecionado}
                         />
                       ))}
@@ -294,8 +295,6 @@ export default function MeusTreinos() {
         </div>
       </div>
 
-      {/* RENDERIZAÇÃO DO MODAL */}
-      {/* Verifica se itemSelecionado existe antes de renderizar */}
       {itemSelecionado && (
         <ExercicioModal 
           item={itemSelecionado} 
