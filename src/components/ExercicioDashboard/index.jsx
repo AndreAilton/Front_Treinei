@@ -666,7 +666,7 @@ const VideoPreview = ({ editModal, setEditModal }) => {
     return (
         <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 h-full flex flex-col">
             <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2"><Video size={18} className="text-blue-500" /> Vídeo</h3>
-            <div className="w-full flex justify-center mb-4 flex-grow bg-black/5 rounded-xl min-h-[300px] items-center">
+            <div className="w-full flex justify-center mb-4 bg-black/5 rounded-xl min-h-[300px] items-center">
                 {videoSrc ? (
                     <video controls className="max-h-[500px] w-auto h-auto object-contain rounded-lg" src={videoSrc} />
                 ) : (
