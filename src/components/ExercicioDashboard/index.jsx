@@ -13,7 +13,9 @@ import {
   List,
   Globe,       
   Download,
-  Eye
+  Eye,
+  ChevronLeft,  // <--- Novo Import
+  ChevronRight  // <--- Novo Import
 } from "lucide-react";
 import {
   getExercicios,
@@ -51,7 +53,12 @@ export default function ExercicioDashboard() {
   const [loadingPublic, setLoadingPublic] = useState(false);
   const [importingId, setImportingId] = useState(null);
   
-  // --- NOVO STATE: VISUALIZAÇÃO DETALHADA ---
+  // --- PAGINAÇÃO (NOVOS STATES) ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8; // Quantidade de itens por página
+  // --------------------------------
+
+  // --- STATE: VISUALIZAÇÃO DETALHADA ---
   const [viewPublicModal, setViewPublicModal] = useState(null); 
   // ------------------------------------------
 
@@ -110,6 +117,7 @@ export default function ExercicioDashboard() {
     setShowPublicModal(true);
     setLoadingPublic(true);
     setPublicFilters({ search: "", categoria: "", grupo: "" });
+    setCurrentPage(1); // Reseta a página ao abrir
     try {
         const data = await getExerciciosPublicos();
         const arr = Array.isArray(data) ? data : [];
@@ -138,6 +146,7 @@ export default function ExercicioDashboard() {
       filtered = filtered.filter((ex) => ex.Grupo_Muscular === publicFilters.grupo);
     }
     setFilteredPublicExercicios(filtered);
+    setCurrentPage(1); // Importante: Volta para a página 1 se filtrar
   }, [publicFilters, publicExercicios]);
 
   // IMPORTAÇÃO COM VÍDEO
@@ -169,7 +178,6 @@ export default function ExercicioDashboard() {
         
         alert(`Exercício "${exPublico.nome}" importado com sucesso!`);
         
-        // Se estiver importando via modal de visualização, fecha ele
         if (viewPublicModal?.id === exPublico.id) {
             setViewPublicModal(null);
         }
@@ -293,6 +301,21 @@ export default function ExercicioDashboard() {
     </div>
   );
 
+  // --- CÁLCULO DE PAGINAÇÃO (RENDER) ---
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentPublicItems = filteredPublicExercicios.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredPublicExercicios.length / itemsPerPage);
+
+  const nextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+  // -------------------------------------
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-8">
       <div className="max-w-7xl mx-auto bg-white shadow-2xl rounded-2xl p-6 sm:p-10 border border-gray-100">
@@ -401,7 +424,7 @@ export default function ExercicioDashboard() {
           onSubmit={(e) => e.preventDefault()}
           submitting={false}
           size="max-w-7xl"
-          showFooter={false} // Remover o rodapé com botão salvar
+          showFooter={false} 
         >
           <div className="mb-6 bg-gray-50 p-4 rounded-xl border border-gray-200">
             <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">Filtrar Exercícios Públicos</h3>
@@ -416,64 +439,92 @@ export default function ExercicioDashboard() {
           ) : filteredPublicExercicios.length === 0 ? (
              <p className="text-center text-gray-500 py-10">Nenhum exercício encontrado.</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredPublicExercicios.map((ex) => (
-                    <div key={ex.id} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-lg hover:ring-2 hover:ring-purple-100 transition flex flex-col justify-between h-full group">
-                        <div 
-                           className="cursor-pointer"
-                           onClick={() => setViewPublicModal(ex)}
+            <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {/* Alterado para renderizar apenas os itens da PÁGINA ATUAL */}
+                    {currentPublicItems.map((ex) => (
+                        <div key={ex.id} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-lg hover:ring-2 hover:ring-purple-100 transition flex flex-col justify-between h-full group">
+                            <div 
+                            className="cursor-pointer"
+                            onClick={() => setViewPublicModal(ex)}
+                            >
+                                <h3 className="font-bold text-gray-800 text-lg mb-1 group-hover:text-purple-600 transition">{ex.nome}</h3>
+                                <div className="flex flex-wrap gap-2 text-xs text-gray-500 mb-3">
+                                    <span className="bg-gray-100 border px-2 py-1 rounded">{ex.Categoria}</span>
+                                    <span className="bg-blue-50 text-blue-700 border border-blue-100 px-2 py-1 rounded">{ex.Grupo_Muscular}</span>
+                                </div>
+                                
+                                <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden mb-3 relative group/video">
+                                    {ex.videos?.[0]?.url ? (
+                                        <>
+                                        <video src={ex.videos[0].url} className="w-full h-full object-cover opacity-80 group-hover/video:opacity-60 transition" />
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                <div className="bg-black/50 p-3 rounded-full backdrop-blur-sm group-hover/video:scale-110 transition">
+                                                    <Eye size={24} className="text-white" />
+                                                </div>
+                                        </div>
+                                        </>
+                                    ) : (
+                                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 text-xs border border-dashed border-gray-300">
+                                            <Eye size={24} className="mb-1 opacity-50"/>
+                                            Visualizar Detalhes
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setViewPublicModal(ex)}
+                                    className="flex-1 py-2.5 rounded-xl font-medium text-sm flex justify-center items-center gap-2 bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
+                                >
+                                    <Eye size={16} /> Ver
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => handleImportExercicio(ex)}
+                                    disabled={importingId === ex.id}
+                                    className={`flex-[2] py-2.5 rounded-xl font-semibold text-sm flex justify-center items-center gap-2 transition-all ${
+                                        importingId === ex.id 
+                                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                        : "bg-purple-600 hover:bg-purple-700 text-white shadow-md active:scale-95"
+                                    }`}
+                                >
+                                    {importingId === ex.id ? <Loader2 size={16} className="animate-spin"/> : <Download size={16} />}
+                                    {importingId === ex.id ? "Importando..." : "Importar"}
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* --- CONTROLES DE PAGINAÇÃO --- */}
+                {totalPages > 1 && (
+                    <div className="flex justify-center items-center gap-4 mt-8 pt-4 border-t border-gray-100">
+                        <button 
+                            onClick={prevPage} 
+                            disabled={currentPage === 1}
+                            className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition"
                         >
-                            <h3 className="font-bold text-gray-800 text-lg mb-1 group-hover:text-purple-600 transition">{ex.nome}</h3>
-                            <div className="flex flex-wrap gap-2 text-xs text-gray-500 mb-3">
-                                <span className="bg-gray-100 border px-2 py-1 rounded">{ex.Categoria}</span>
-                                <span className="bg-blue-50 text-blue-700 border border-blue-100 px-2 py-1 rounded">{ex.Grupo_Muscular}</span>
-                            </div>
-                            
-                            <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden mb-3 relative group/video">
-                                {ex.videos?.[0]?.url ? (
-                                    <>
-                                       <video src={ex.videos[0].url} className="w-full h-full object-cover opacity-80 group-hover/video:opacity-60 transition" />
-                                       <div className="absolute inset-0 flex items-center justify-center">
-                                            <div className="bg-black/50 p-3 rounded-full backdrop-blur-sm group-hover/video:scale-110 transition">
-                                                <Eye size={24} className="text-white" />
-                                            </div>
-                                       </div>
-                                    </>
-                                ) : (
-                                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 text-xs border border-dashed border-gray-300">
-                                        <Eye size={24} className="mb-1 opacity-50"/>
-                                        Visualizar Detalhes
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="flex gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setViewPublicModal(ex)}
-                                className="flex-1 py-2.5 rounded-xl font-medium text-sm flex justify-center items-center gap-2 bg-gray-100 text-gray-700 hover:bg-gray-200 transition"
-                            >
-                                <Eye size={16} /> Ver
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() => handleImportExercicio(ex)}
-                                disabled={importingId === ex.id}
-                                className={`flex-[2] py-2.5 rounded-xl font-semibold text-sm flex justify-center items-center gap-2 transition-all ${
-                                    importingId === ex.id 
-                                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                    : "bg-purple-600 hover:bg-purple-700 text-white shadow-md active:scale-95"
-                                }`}
-                            >
-                                {importingId === ex.id ? <Loader2 size={16} className="animate-spin"/> : <Download size={16} />}
-                                {importingId === ex.id ? "Importando..." : "Importar"}
-                            </button>
-                        </div>
+                            <ChevronLeft size={20} />
+                        </button>
+                        
+                        <span className="text-sm font-medium text-gray-600">
+                            Página <span className="text-purple-600 font-bold">{currentPage}</span> de {totalPages}
+                        </span>
+                        
+                        <button 
+                            onClick={nextPage} 
+                            disabled={currentPage === totalPages}
+                            className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        >
+                            <ChevronRight size={20} />
+                        </button>
                     </div>
-                ))}
-            </div>
+                )}
+            </>
           )}
         </Modal>
       )}
