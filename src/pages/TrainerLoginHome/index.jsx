@@ -13,7 +13,7 @@ import {
 
 // Importa os dois serviços
 import { getdadosTreinador } from "../../services/Treinador/treinadorService"; 
-import { getDietas } from "../../services/Treinador/dietasService"; // <--- NOVO IMPORT
+import { getDietas } from "../../services/Treinador/DietasService"; // <--- NOVO IMPORT
 
 const StatCard = ({ title, value, icon, color, subtext }) => (
   <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
