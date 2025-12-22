@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Carrosel from "../../components/Carrosel";
+import { TrainerDashboard } from "../TrainerLoginHome";
 import {
   Dumbbell,
   Utensils,
@@ -30,8 +31,28 @@ import {
 const LandingPage = () => {
   const navigate = useNavigate();
   const [showLoginOptions, setShowLoginOptions] = useState(false);
+  
+  // ESTADO PARA VERIFICAR LOGIN (Adapte para sua lógica real de Auth)
+  const [isTrainerLoggedIn, setIsTrainerLoggedIn] = useState(false);
 
-  // Scroll suave seguro
+  useEffect(() => {
+     // Exemplo: Verificar se existe token no localStorage
+     const token = localStorage.getItem('trainer_token'); // Use sua chave real
+     if (token) {
+        setIsTrainerLoggedIn(true);
+     }
+  }, []);
+
+  // --- LÓGICA DE DECISÃO ---
+  // Se estiver logado, retorna o Dashboard direto, ignorando a Landing Page
+  if (isTrainerLoggedIn) {
+      return <TrainerDashboard />;
+  }
+
+  // Se NÃO estiver logado, continua executando o código da Landing Page abaixo...
+  // ... (Cole aqui todo o restante do código da LandingPage original:
+  // scrollToSection, testimonialsData, return da Landing Page, etc.)
+  
   const scrollToSection = (id) => {
     const element = document.getElementById(id);
     if (element) {
