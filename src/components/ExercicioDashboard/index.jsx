@@ -16,8 +16,8 @@ import {
   Eye,
   ChevronLeft,
   ChevronRight,
-  Upload,     // <--- Novo Import para o destaque
-  FileVideo   // <--- Novo Import para o destaque
+  Upload,     
+  FileVideo   
 } from "lucide-react";
 import {
   getExercicios,
@@ -162,7 +162,6 @@ export default function ExercicioDashboard() {
         fd.append("Grupo_Muscular", exPublico.Grupo_Muscular);
         fd.append("Descricao", exPublico.Descricao || "");
         fd.append("Aparelho", exPublico.Aparelho || "");
-
         if (exPublico.videos?.[0]?.url) {
             try {
                 const videoResponse = await fetch(exPublico.videos[0].url);
@@ -171,6 +170,7 @@ export default function ExercicioDashboard() {
                 const videoFile = new File([videoBlob], `video_${exPublico.id}.mp4`, { type: "video/mp4" });
                 fd.append("file", videoFile);
             } catch (videoErr) {
+              console.log(videoErr)
                 console.warn("Não foi possível baixar o vídeo automaticamente.", videoErr);
             }
         }
@@ -269,39 +269,6 @@ export default function ExercicioDashboard() {
   const grupos = Array.from(new Set(exercicios.map((ex) => ex.Grupo_Muscular).filter(Boolean)));
   const publicCategorias = Array.from(new Set(publicExercicios.map((ex) => ex.Categoria).filter(Boolean)));
   const publicGrupos = Array.from(new Set(publicExercicios.map((ex) => ex.Grupo_Muscular).filter(Boolean)));
-
-
-  // --- COMPONENTE FILTER BAR ---
-  const FilterBar = ({ currentFilters, setFilterState, catOptions, grpOptions, placeholder }) => (
-    <div className="flex flex-col md:flex-row gap-4 mb-6 w-full">
-      <div className="relative flex-grow">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-        <input
-          type="text"
-          placeholder={placeholder || "Buscar..."}
-          value={currentFilters.search}
-          onChange={(e) => setFilterState({ ...currentFilters, search: e.target.value })}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-        />
-      </div>
-      <select
-        value={currentFilters.categoria}
-        onChange={(e) => setFilterState({ ...currentFilters, categoria: e.target.value })}
-        className="px-4 py-2 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-      >
-        <option value="">Todas as Categorias</option>
-        {catOptions.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
-      </select>
-      <select
-        value={currentFilters.grupo}
-        onChange={(e) => setFilterState({ ...currentFilters, grupo: e.target.value })}
-        className="px-4 py-2 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-      >
-        <option value="">Todos os Grupos</option>
-        {grpOptions.map((grp) => <option key={grp} value={grp}>{grp}</option>)}
-      </select>
-    </div>
-  );
 
   // --- CÁLCULO DE PAGINAÇÃO (RENDER) ---
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -504,7 +471,7 @@ export default function ExercicioDashboard() {
                                                 <div className="bg-black/50 p-3 rounded-full backdrop-blur-sm group-hover/video:scale-110 transition">
                                                     <Eye size={24} className="text-white" />
                                                 </div>
-                                        </div>
+                                            </div>
                                         </>
                                     ) : (
                                         <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 text-xs border border-dashed border-gray-300">
@@ -649,6 +616,38 @@ export default function ExercicioDashboard() {
     </div>
   );
 }
+
+// --- COMPONENTE FILTER BAR (MOVIDO PARA FORA DO EXERCICIODASHBOARD) ---
+const FilterBar = ({ currentFilters, setFilterState, catOptions, grpOptions, placeholder }) => (
+    <div className="flex flex-col md:flex-row gap-4 mb-6 w-full">
+      <div className="relative flex-grow">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <input
+          type="text"
+          placeholder={placeholder || "Buscar..."}
+          value={currentFilters.search}
+          onChange={(e) => setFilterState({ ...currentFilters, search: e.target.value })}
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+        />
+      </div>
+      <select
+        value={currentFilters.categoria}
+        onChange={(e) => setFilterState({ ...currentFilters, categoria: e.target.value })}
+        className="px-4 py-2 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+      >
+        <option value="">Todas as Categorias</option>
+        {catOptions.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
+      </select>
+      <select
+        value={currentFilters.grupo}
+        onChange={(e) => setFilterState({ ...currentFilters, grupo: e.target.value })}
+        className="px-4 py-2 border border-gray-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+      >
+        <option value="">Todos os Grupos</option>
+        {grpOptions.map((grp) => <option key={grp} value={grp}>{grp}</option>)}
+      </select>
+    </div>
+);
 
 // Componente Modal Reutilizável com prop showFooter
 const Modal = ({ title, onClose, onSubmit, children, submitting, size = 'max-w-lg', showFooter = true }) => (
