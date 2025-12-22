@@ -14,8 +14,10 @@ import {
   Globe,       
   Download,
   Eye,
-  ChevronLeft,  // <--- Novo Import
-  ChevronRight  // <--- Novo Import
+  ChevronLeft,
+  ChevronRight,
+  Upload,     // <--- Novo Import para o destaque
+  FileVideo   // <--- Novo Import para o destaque
 } from "lucide-react";
 import {
   getExercicios,
@@ -53,9 +55,9 @@ export default function ExercicioDashboard() {
   const [loadingPublic, setLoadingPublic] = useState(false);
   const [importingId, setImportingId] = useState(null);
   
-  // --- PAGINAÇÃO (NOVOS STATES) ---
+  // --- PAGINAÇÃO ---
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8; // Quantidade de itens por página
+  const itemsPerPage = 8; 
   // --------------------------------
 
   // --- STATE: VISUALIZAÇÃO DETALHADA ---
@@ -117,7 +119,7 @@ export default function ExercicioDashboard() {
     setShowPublicModal(true);
     setLoadingPublic(true);
     setPublicFilters({ search: "", categoria: "", grupo: "" });
-    setCurrentPage(1); // Reseta a página ao abrir
+    setCurrentPage(1); 
     try {
         const data = await getExerciciosPublicos();
         const arr = Array.isArray(data) ? data : [];
@@ -146,7 +148,7 @@ export default function ExercicioDashboard() {
       filtered = filtered.filter((ex) => ex.Grupo_Muscular === publicFilters.grupo);
     }
     setFilteredPublicExercicios(filtered);
-    setCurrentPage(1); // Importante: Volta para a página 1 se filtrar
+    setCurrentPage(1); 
   }, [publicFilters, publicExercicios]);
 
   // IMPORTAÇÃO COM VÍDEO
@@ -394,7 +396,48 @@ export default function ExercicioDashboard() {
             <input type="text" placeholder="Grupo Muscular" value={form.Grupo_Muscular} onChange={(e) => setForm({...form, Grupo_Muscular: e.target.value})} required className="w-full border p-2 rounded-xl" />
             <input type="text" placeholder="Aparelho" value={form.Aparelho} onChange={(e) => setForm({...form, Aparelho: e.target.value})} className="w-full border p-2 rounded-xl" />
             <textarea placeholder="Descrição" value={form.Descricao} onChange={(e) => setForm({...form, Descricao: e.target.value})} className="w-full border p-2 rounded-xl" />
-            <input type="file" accept="video/*" onChange={(e) => setForm({...form, file: e.target.files[0]})} className="w-full" />
+            
+            {/* --- ÁREA DE UPLOAD COM DESTAQUE --- */}
+            <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Vídeo de Demonstração</label>
+                <div className="relative">
+                    <input
+                        type="file"
+                        id="video-upload-new"
+                        accept="video/*"
+                        className="hidden"
+                        onChange={(e) => setForm({ ...form, file: e.target.files[0] })}
+                    />
+                    <label
+                        htmlFor="video-upload-new"
+                        className={`flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200 gap-2
+                            ${form.file 
+                                ? 'border-green-400 bg-green-50 hover:bg-green-100' 
+                                : 'border-blue-300 bg-blue-50 hover:bg-blue-100 hover:border-blue-500'
+                            }`}
+                    >
+                        {form.file ? (
+                            <div className="flex flex-col items-center text-green-700 animate-in fade-in zoom-in duration-200">
+                                <div className="bg-green-200 p-3 rounded-full mb-1">
+                                    <FileVideo size={28} className="text-green-800" />
+                                </div>
+                                <span className="font-semibold text-sm max-w-[250px] truncate">{form.file.name}</span>
+                                <span className="text-xs text-green-600">Clique para alterar o vídeo</span>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center text-blue-600 group">
+                                <div className="bg-white p-3 rounded-full shadow-sm mb-2 group-hover:scale-110 group-hover:shadow-md transition-all duration-200">
+                                    <Upload size={24} className="text-blue-600" />
+                                </div>
+                                <span className="font-semibold text-sm">Clique para adicionar vídeo</span>
+                                <span className="text-xs text-blue-400">Formatos: MP4, MOV (Max. 10MB)</span>
+                            </div>
+                        )}
+                    </label>
+                </div>
+            </div>
+            {/* ----------------------------------- */}
+
           </div>
         </Modal>
       )}
@@ -441,7 +484,6 @@ export default function ExercicioDashboard() {
           ) : (
             <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {/* Alterado para renderizar apenas os itens da PÁGINA ATUAL */}
                     {currentPublicItems.map((ex) => (
                         <div key={ex.id} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-lg hover:ring-2 hover:ring-purple-100 transition flex flex-col justify-between h-full group">
                             <div 
