@@ -26,7 +26,7 @@ import {
   updateTreinoDia,
 } from "../../services/Treinador/TreinoDiasService";
 
-// --- Sub-Componente: InputGroup (Visual Ajustado) ---
+// --- Sub-Componente: InputGroup ---
 const InputGroup = ({ label, Icon, value, onChange, type, min }) => (
   <div>
     <label className="font-semibold text-gray-700 flex items-center gap-1.5 mb-1.5 text-sm">
@@ -42,7 +42,7 @@ const InputGroup = ({ label, Icon, value, onChange, type, min }) => (
   </div>
 );
 
-// --- Sub-Componente: ExercicioModal (LAYOUT CORRIGIDO PARA VÍDEO VERTICAL) ---
+// --- Sub-Componente: ExercicioModal ---
 const ExercicioModal = ({
   selectedExercicio,
   isModalOpen,
@@ -188,7 +188,6 @@ const ExercicioCard = ({ ex, index, onDoubleClick, isDayItem = false }) => {
           ${isDayItem 
              ? "border-gray-200 mb-2 w-full" 
              : "border-blue-100 hover:border-blue-400 w-full sm:w-[calc(50%-0.5rem)] xl:w-[calc(33.33%-0.5rem)]" 
-             // Ajuste de largura para o card de disponibilidade (responsivo)
            }
         `}
       >
@@ -249,7 +248,6 @@ export default function TreinoDias() {
     treinoSearch: "",
   });
 
-  // 🔹 Estado para corrigir problema de Hydration/Renderização do DnD no React 18
   const [dndReady, setDndReady] = useState(false);
 
   useEffect(() => {
@@ -260,7 +258,6 @@ export default function TreinoDias() {
     };
   }, []);
 
-  // 🔹 Estado do modal
   const [selectedExercicio, setSelectedExercicio] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editData, setEditData] = useState({
@@ -443,14 +440,33 @@ export default function TreinoDias() {
     const newTreino = { ...treinoDias };
     const sourceDia = source.droppableId;
     const destinationDia = destination.droppableId;
-// 2. ADICIONAR (arrastando da lista de exercícios para um dia)
+
+    // 1. REMOVER DO DIA (Arrastar de volta para "exercicios")
+    if (destinationDia === "exercicios" && sourceDia !== "exercicios") {
+        const exercicioRemovido = newTreino[sourceDia][source.index];
+        
+        // Remove do state local
+        newTreino[sourceDia].splice(source.index, 1);
+        setTreinoDias(newTreino);
+
+        // Deleta do Banco de Dados
+        try {
+            if (exercicioRemovido.idTreinoDia) {
+                await deleteTreinoDia(exercicioRemovido.idTreinoDia);
+            }
+        } catch (err) {
+            console.error("❌ Erro ao deletar treino-dia:", err);
+            alert("Erro ao remover exercício.");
+        }
+        return;
+    }
+
+    // 2. ADICIONAR (Arrastar da lista para um dia)
     if (sourceDia === "exercicios" && destinationDia !== "exercicios") {
       const exercicioMovido = filteredExercicios[source.index];
 
-      // Verifica duplicidade visual
       if (newTreino[destinationDia].some((ex) => ex.id === exercicioMovido.id)) return;
 
-      // Objeto completo para a Interface (UI) - Precisa de tudo para renderizar o card
       const novoExercicioUI = {
         ...exercicioMovido,
         Series: exercicioMovido.Series ?? 4,
@@ -459,12 +475,10 @@ export default function TreinoDias() {
         Observacoes: exercicioMovido.Observacoes ?? "Executar com carga moderada",
       };
       
-      // Atualiza a UI imediatamente (Optimistic UI)
       newTreino[destinationDia].splice(destination.index, 0, novoExercicioUI);
       setTreinoDias(newTreino);
 
       try {
-        // 🔹 CORREÇÃO: Payload Limpo apenas com o que o Backend espera
         const payloadBackend = {
           id_treino: Number(treinoSelecionado),
           Dia_da_Semana: destinationDia,
@@ -477,12 +491,8 @@ export default function TreinoDias() {
 
         const novoRegistro = await createTreinoDia(payloadBackend);
 
-        // Atualiza o item na tela com o ID real gerado pelo banco (idTreinoDia)
-        // Isso é crucial para poder deletar ou mover depois sem recarregar a tela
         const updatedTreinoDias = { ...newTreino };
         updatedTreinoDias[destinationDia] = updatedTreinoDias[destinationDia].map(ex => {
-            // Se for o exercício que acabamos de adicionar (identificado pelo ID do exercício)
-            // E ainda não tiver idTreinoDia, atualizamos.
             if (ex.id === exercicioMovido.id && !ex.idTreinoDia) {
                 return { ...ex, idTreinoDia: novoRegistro.id };
             }
@@ -493,12 +503,12 @@ export default function TreinoDias() {
 
       } catch (err) {
         console.error("❌ Erro ao criar treino-dia:", err);
-        // Opcional: Reverter a UI se der erro
         alert("Erro ao salvar o exercício no banco de dados.");
       }
       return;
     }
 
+    // 3. MOVER ENTRE DIAS
     if (sourceDia !== destinationDia) {
       const [moved] = newTreino[sourceDia].splice(source.index, 1);
       
@@ -520,6 +530,7 @@ export default function TreinoDias() {
       return;
     }
 
+    // 4. REORDENAR NO MESMO DIA
     if (sourceDia === destinationDia) {
       const diaAtual = Array.from(newTreino[sourceDia]);
       const [reordered] = diaAtual.splice(source.index, 1);
@@ -539,7 +550,6 @@ export default function TreinoDias() {
   ), [exercicios]);
 
 
-  // Se o DnD não estiver pronto (evita bug de hydration/render primeira vez), retorna loading ou null temporário
   if (!dndReady && !loading) {
       return null;
   }
@@ -614,11 +624,12 @@ export default function TreinoDias() {
                                 onChange={(e) => setFilters({ ...filters, search: e.target.value })}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-400"
                             />
-                            <div className="flex gap-2">
+                            {/* Filtros Responsivos */}
+                            <div className="flex flex-wrap gap-2">
                                 <select
                                     value={filters.categoria}
                                     onChange={(e) => setFilters({ ...filters, categoria: e.target.value })}
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-gray-700"
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-gray-700 min-w-[120px]"
                                 >
                                     <option value="">Categorias</option>
                                     {categorias.map(c => <option key={c} value={c}>{c}</option>)}
@@ -626,9 +637,9 @@ export default function TreinoDias() {
                                 <select
                                     value={filters.grupo}
                                     onChange={(e) => setFilters({ ...filters, grupo: e.target.value })}
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-gray-700"
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-gray-700 min-w-[120px]"
                                 >
-                                    <option value="">Grupos Musculares</option>
+                                    <option value="">Grupos</option>
                                     {grupos.map(g => <option key={g} value={g}>{g}</option>)}
                                 </select>
                             </div>
@@ -642,13 +653,14 @@ export default function TreinoDias() {
                                 <div
                                     ref={provided.innerRef}
                                     {...provided.droppableProps}
-                                    // 🔹 CORREÇÃO: Flex-wrap, gap para espaçamento e removido space-y rígido
-                                    className="flex flex-wrap gap-2 overflow-y-auto pr-2 content-start h-full max-h-[600px]"
+                                    className="flex flex-wrap gap-2 overflow-y-auto pr-2 content-start h-full max-h-[600px] min-h-[200px]"
                                 >
                                     {filteredExercicios.length === 0 ? (
-                                        <p className="text-gray-500 italic text-sm text-center py-4 w-full">
-                                            Nenhum exercício disponível.
-                                        </p>
+                                        <div className="text-gray-500 italic text-sm text-center py-10 w-full flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg bg-gray-100/50">
+                                            <Dumbbell className="mb-2 opacity-50" size={24}/>
+                                            <p>Lista vazia.</p>
+                                            <p className="text-xs mt-1">Solte aqui para remover do treino.</p>
+                                        </div>
                                     ) : (
                                         filteredExercicios.map((ex, index) => (
                                             <ExercicioCard
@@ -665,24 +677,26 @@ export default function TreinoDias() {
                         </Droppable>
                     </div>
 
-                    {/* 🔹 Grade da Semana (Destinos) */}
-                    <div className="w-full lg:w-3/4 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-4">
+                    {/* 🔹 Grade da Semana - CORRIGIDO: Mobile 1 Coluna (grid-cols-1) */}
+                    <div className="w-full lg:w-3/4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-7 gap-4">
                         {diasSemana.map((dia) => (
                             <Droppable key={dia} droppableId={dia}>
                                 {(provided) => (
                                     <div
                                         ref={provided.innerRef}
                                         {...provided.droppableProps}
-                                        className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-xl p-3 flex flex-col shadow-inner min-h-[350px] transition-colors hover:border-blue-400"
+                                        className="bg-gray-100 border-2 border-dashed border-gray-300 rounded-xl p-3 flex flex-col shadow-inner min-h-[350px] transition-colors hover:border-blue-400 h-full"
                                     >
                                         <h3 className="font-bold text-blue-700 text-center mb-3 pb-2 border-b border-blue-200">
                                             {dia}
                                         </h3>
 
                                         {treinoDias[dia]?.length === 0 && (
-                                            <p className="text-sm text-gray-500 text-center italic mt-10">
-                                                Arraste exercícios para cá.
-                                            </p>
+                                            <div className="flex-1 flex items-center justify-center">
+                                                <p className="text-sm text-gray-400 text-center italic">
+                                                    Arraste exercícios para cá.
+                                                </p>
+                                            </div>
                                         )}
 
                                         {(treinoDias[dia] || []).map((ex, index) => (
