@@ -8,13 +8,28 @@ import {
   Target, 
   CalendarCheck,
   Coffee,
-  AlertCircle
+  AlertCircle,
+  MessageCircle // <--- 1. Importado novo ícone
 } from "lucide-react";
+
+// --- 0. COMPONENTE BOTÃO WHATSAPP (Novo) ---
+const WhatsAppButton = () => (
+  <a
+    href="https://api.whatsapp.com/send/?phone=5516994423374&text=Oque+Voc%C3%AA+Pode+Fazer?"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="fixed bottom-6 right-6 z-50 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 flex items-center justify-center group border-2 border-white/20"
+    title="Falar no WhatsApp"
+  >
+    <MessageCircle size={32} className="fill-current" />
+    {/* Efeito de "Pulse" opcional para chamar atenção */}
+    <span className="absolute -inset-1 rounded-full bg-green-500 opacity-30 group-hover:animate-ping"></span>
+  </a>
+);
 
 // --- 1. COMPONENTES VISUAIS AUXILIARES ---
 
 const StatBadge = ({ icon: Icon, label, value, color }) => {
-  // Mapas de cores para estilização dinâmica
   const colorMap = {
     blue: "bg-blue-50 text-blue-700 border-blue-100",
     purple: "bg-purple-50 text-purple-700 border-purple-100",
@@ -36,7 +51,6 @@ const StatBadge = ({ icon: Icon, label, value, color }) => {
 const ExercicioCard = ({ item }) => {
   if (!item) return null;
 
-  // Tratamento da URL do vídeo
   const rawUrl = item.exercicio?.videos?.[0]?.url;
   const videoUrl = rawUrl ? (rawUrl.startsWith('http') ? rawUrl : `${rawUrl}`) : null;
 
@@ -49,7 +63,7 @@ const ExercicioCard = ({ item }) => {
             src={videoUrl}
             controls
             playsInline
-            preload="metadata" // Importante para não pesar a página
+            preload="metadata"
             className="w-full h-full object-contain"
           />
         ) : (
@@ -62,27 +76,23 @@ const ExercicioCard = ({ item }) => {
 
       {/* CONTEÚDO DO CARD */}
       <div className="p-5 flex flex-col flex-1">
-        {/* Título e Categoria */}
         <div className="mb-4">
           <div className="flex justify-between items-start gap-2">
             <h3 className="font-extrabold text-gray-800 text-lg leading-tight line-clamp-2">
               {item.exercicio?.nome || "Exercício"}
             </h3>
-            {/* Categoria Badge (opcional, pegando do primeiro vídeo ou padrão) */}
             <span className="shrink-0 px-2 py-1 bg-gray-100 text-gray-600 text-[10px] font-bold uppercase rounded-md tracking-wide">
               {item.exercicio?.videos?.[0]?.category || "Geral"}
             </span>
           </div>
         </div>
 
-        {/* Grid de Estatísticas (Séries, Reps, Descanso) */}
         <div className="flex gap-2 mb-4">
           <StatBadge icon={Dumbbell} label="Séries" value={item.Series || "-"} color="blue" />
           <StatBadge icon={Target} label="Reps" value={item.Repeticoes || "-"} color="purple" />
           <StatBadge icon={Clock} label="Descanso" value={`${item.Descanso || 0}s`} color="orange" />
         </div>
 
-        {/* Instruções / Descrição */}
         {item.exercicio?.descricao && (
           <div className="bg-gray-50 rounded-xl p-3 mt-auto">
             <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase mb-1">
@@ -103,7 +113,6 @@ export default function UserLoginHome() {
   const [usuario, setUsuario] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Mapa de dias para converter getDay() (0-6) para string do banco
   const mapaDiasSemana = useMemo(() => [
     "Domingo", "Segunda-Feira", "Terça-Feira", "Quarta-Feira", 
     "Quinta-Feira", "Sexta-Feira", "Sábado"
@@ -126,7 +135,6 @@ export default function UserLoginHome() {
     carregarUsuario();
   }, [carregarUsuario]);
 
-  // Lógica de Filtragem do Treino de HOJE
   const treinoDoDia = useMemo(() => {
     if (!usuario?.usuarios_treino?.[0]?.treino?.treinos_dia) return null;
 
@@ -134,16 +142,13 @@ export default function UserLoginHome() {
     const hojeString = mapaDiasSemana[hojeIndex];
     const todosTreinos = usuario.usuarios_treino[0].treino.treinos_dia;
 
-    // Filtra apenas exercícios de hoje
     const exerciciosHoje = todosTreinos.filter(t => t.Dia_da_Semana === hojeString);
 
     if (exerciciosHoje.length === 0) return { hojeString, categorias: {}, totalExercicios: 0 };
 
-    // Agrupa por categoria para organização visual
     const exerciciosPorCategoria = exerciciosHoje.reduce((acc, ex) => {
       if (!ex || !ex.exercicio) return acc;
       
-      // Tenta pegar a categoria do vídeo, se não existir usa "Principal"
       const cat = ex.exercicio.videos?.[0]?.category || "Sequência Principal";
       
       if (!acc[cat]) acc[cat] = [];
@@ -180,6 +185,8 @@ export default function UserLoginHome() {
                     </p>
                 </div>
             </div>
+            {/* Botão adicionado na tela de descanso também */}
+            <WhatsAppButton />
         </div>
     );
   }
@@ -190,7 +197,6 @@ export default function UserLoginHome() {
         
         {/* HEADER HERO */}
         <div className="bg-gray-900 rounded-[2rem] p-6 md:p-10 shadow-2xl text-white relative overflow-hidden">
-           {/* Efeitos de Fundo */}
            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600 rounded-full mix-blend-overlay filter blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2"></div>
            <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-600 rounded-full mix-blend-overlay filter blur-3xl opacity-20 translate-y-1/2 -translate-x-1/2"></div>
            
@@ -216,13 +222,11 @@ export default function UserLoginHome() {
             {Object.keys(treinoDoDia.categorias).map((categoria) => (
                 <div key={categoria} className="animate-in fade-in slide-in-from-bottom-8 duration-700">
                     
-                    {/* Título da Categoria (Se houver mais de uma, ajuda a organizar) */}
                     <div className="flex items-center gap-3 mb-5 px-1">
                          <div className="h-8 w-1.5 bg-blue-600 rounded-full"></div>
                          <h2 className="text-xl font-bold text-gray-800 capitalize">{categoria}</h2>
                     </div>
                     
-                    {/* GRID Responsivo: 1 coluna no mobile (feed), 2 no tablet, 3 no desktop */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {treinoDoDia.categorias[categoria].map((exercicio, index) => (
                             <ExercicioCard
@@ -235,12 +239,14 @@ export default function UserLoginHome() {
             ))}
         </div>
 
-        {/* Footerzinho Motivacional */}
         <div className="text-center py-8 opacity-50">
             <p className="text-sm font-semibold text-gray-400 uppercase tracking-widest">Treinei.Fit • Keep Moving</p>
         </div>
 
       </div>
+
+      {/* Botão flutuante do WhatsApp */}
+      <WhatsAppButton />
     </div>
   );
 }
