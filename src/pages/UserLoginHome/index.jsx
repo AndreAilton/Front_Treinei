@@ -13,19 +13,6 @@ import {
 } from "lucide-react";
 
 // --- 0. COMPONENTE BOTÃO WHATSAPP (Novo) ---
-const WhatsAppButton = () => (
-  <a
-    href="https://api.whatsapp.com/send/?phone=5516994423374&text=Oque+Voc%C3%AA+Pode+Fazer?"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="fixed bottom-6 right-6 z-50 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 flex items-center justify-center group border-2 border-white/20"
-    title="Falar no WhatsApp"
-  >
-    <MessageCircle size={32} className="fill-current" />
-    {/* Efeito de "Pulse" opcional para chamar atenção */}
-    <span className="absolute -inset-1 rounded-full bg-green-500 opacity-30 group-hover:animate-ping"></span>
-  </a>
-);
 
 // --- 1. COMPONENTES VISUAIS AUXILIARES ---
 
@@ -186,7 +173,6 @@ export default function UserLoginHome() {
                 </div>
             </div>
             {/* Botão adicionado na tela de descanso também */}
-            <WhatsAppButton />
         </div>
     );
   }
@@ -246,7 +232,6 @@ export default function UserLoginHome() {
       </div>
 
       {/* Botão flutuante do WhatsApp */}
-      <WhatsAppButton />
     </div>
   );
 }
